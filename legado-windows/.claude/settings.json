@@ -1,0 +1,6 @@
+{
+  "model": "sonnet",
+  "permissions": {
+    "allow": ["Bash(python lib.py --push)"]
+  }
+}

@@ -1,0 +1,132 @@
+# CLAUDE.md — bibliotecária
+
+Ferramenta desktop pra cuidar de um vault Obsidian com ajuda do Claude, sem deixar
+o agente escrever direto nas notas. Todo trabalho do agente sai num staging; o
+usuário revisa (com diff) e só ele promove pra nota de verdade.
+
+## Como chegamos aqui
+
+Nasceu como script de terminal (`lib.py` + Claude Code CLI) dentro do repo do
+homelab, testado no Windows. Validou o conceito central — mirror somente-leitura,
+staging de propostas, promoção manual — e também expôs limites (airgap "soft",
+proposta que nunca morre, terminal inviável pra quem não é técnico). Virou repo
+próprio quando o objetivo mudou de "ferramenta pessoal" pra "app pra compartilhar
+com amigos não-técnicos".
+
+## O que é (produto)
+
+- Cada pessoa instala e usa **com a própria conta Claude** — mono-usuário por
+  instalação, sem multi-tenant.
+- O vault sincroniza sozinho (ex: Obsidian LiveSync); a bibliotecária não
+  sincroniza nada — só produz propostas, que viajam junto com o vault.
+- **Painel de revisão roda offline.** Só a sessão do agente (Escrivão /
+  Bibliotecário) precisa de rede.
+
+## Decisões travadas
+
+| Data | Decisão | Porquê |
+|---|---|---|
+| 2026-09-09 | **Opção B**: UI própria hospeda a conversa via Claude Agent SDK, não terminal | UX pra leigo (botão, sem prompt de permissão); tools escopadas em código dão **airgap duro** — agente não tem path nem bash livre, só `ler_mirror` / `listar_mirror` / `escrever_out`. Custo: mais frontend, aceito (sem prazo) |
+| 2026-09-09 | MVP = **app de 2 botões**, sem chat livre | Escrivão (por nota) e Bibliotecário (auditoria) cobrem os use cases centrais sem exigir UI de chat. Chat livre = fase 2 |
+| 2026-09-09 | Distribuição via **GitHub Releases** | — |
+| 2026-09-09 | Onboarding: **usuário não pré-instala nada** | runtime (Node/Claude Code) embutido no app via sidecar, não instalado no sistema — menos elevação/antivírus/PATH pra debugar remoto |
+| 2026-09-09 | **UC5 (busca semântica) → fase 2** | embedding + índice + modelo local offline dobra o escopo do MVP |
+| 2026-09-09 | **UC3 (multi-máquina) é opcional** | quem usa numa máquina só não é forçado ao modelo de sync |
+| 2026-09-11 | Auth via **assinatura do usuário** (Agent SDK), não API key | Anthropic libera crédito mensal de Agent SDK pra Pro/Max/Team/Enterprise cobrindo apps de terceiro (desde 15/jun/2026) — mas confirmar de novo antes de implementar, já mudou de posição uma vez (ver `estudos.md` §2) |
+| 2026-09-11 | Shell do app: **Tauri** (não Wails/Electron) | Sidecar de binário externo é feature oficial e documentada no Tauri (`externalBin`), enquanto no Wails é discussion aberta sem solução — risco direto pro passo 1 do spike (embutir Node). Wails v3 também ainda em beta com gates bloqueantes pra GA, e mantido por sponsors independentes (bus factor baixo) vs. Tauri com org/foundation por trás. Custo aceito: Rust fora da zona de conforto do Gabs |
+
+## Use cases
+
+| # | Job | Modo | MVP? |
+|---|---|---|---|
+| UC1 | braindump zoado → versão legível | Escrivão (por nota) | sim |
+| UC2 | auditar vault (órfã, duplicata, link quebrado, nota inchada) → relatório | Bibliotecário (semanal por ora) | sim |
+| UC3 | aceitar/rejeitar propostas de outra máquina | — | opcional |
+| UC4 | criar/atualizar MOC (`A00`) da pasta | ação dirigida | pós-MVP |
+| UC5 | "onde falei sobre X" (busca semântica) | — | fase 2 |
+| UC6 | quebrar nota grande em duas | ação dirigida | pós-MVP |
+| UC7 | preencher frontmatter em lote | — | pós-MVP |
+
+- Escrivão roda **por nota** (usuário aponta o arquivo).
+- Bibliotecário pode fazer **handoff** pro Escrivão ("essa órfã tá confusa" → job
+  de substituição), sempre com aprovação do usuário.
+
+## Ciclo de vida de uma proposta
+
+3 tipos de saída do agente:
+
+| Tipo | Quem gera | Mapeia pra | Fim de vida |
+|---|---|---|---|
+| Substituição | Escrivão | nota existente | diff → sobrescreve a nota real, ou descarta |
+| Nota nova | Bibliotecário (MOC, split) | arquivo inexistente | cria no vault, ou descarta |
+| Relatório | Bibliotecário (auditoria) | nada (documento solto) | lê → pode virar job de Escrivão → arquiva/apaga |
+
+- Estados: `rascunho` → `em revisão` → `aceita` / `rejeitada` / `adiada`.
+- **Staging é outbox, não histórico.** `aceita` e `rejeitada` removem a proposta e
+  essa remoção **propaga** — nunca fica resíduo que ressuscita. (No protótipo
+  antigo isso não acontecia — era o bug da "proposta-zumbi", ver `legado-windows/`.)
+- Promover = a UI escreve na nota real, **só sob comando explícito, depois do
+  diff**. Único caminho de escrita no vault.
+
+## Arquitetura
+
+- **Execução do agente**: Claude Agent SDK, tools *in-process* (`ler_mirror`,
+  `listar_mirror`, `escrever_out`), permission mode `dontAsk` — nega qualquer
+  coisa fora dessas três. Ver `estudos.md` §1.
+- **Prompt de cada modo**: hoje escrivão e bibliotecário vivem juntos em
+  `prompts/vault-agent.md` (herdado do protótipo). **A decidir**: separar em dois
+  arquivos/system-prompts quando a UI virar "2 botões", ou manter um com seleção
+  de modo por parâmetro.
+- **Auth**: `claude setup-token` disparado pelo app → token OAuth de 1 ano
+  guardado no keychain do SO. Consome o crédito de Agent SDK da assinatura do
+  usuário, não API key. Ver `estudos.md` §2 e §3.
+- **Shell do app**: **Tauri**. Ver `estudos.md` §4.
+- **Runtime embutido**: Claude Code + Agent SDK entram como *sidecar* do Tauri
+  (`externalBin`), compilado com Node SEA (não `pkg`, arquivado). Ver
+  `estudos.md` §5.
+- **UI de diff/promover**: CodeMirror 6 + `@codemirror/merge`, roda 100% offline.
+  Ver `estudos.md` §6.
+- **Distribuição/update**: GitHub Releases; updater nativo do shell escolhido.
+  Ver `estudos.md` §9.
+
+## Estado atual
+
+- **Nada da Opção B foi codado.** O que existe é o protótipo de terminal (Opção
+  A), testado no Windows, guardado em `legado-windows/` como referência de
+  comportamento — não é pra evoluir, é pra não perder o que já foi validado (as
+  regras do escrivão/bibliotecário, a estrutura mirror/out/staging).
+- Próximo passo real de código: **spike de onboarding** (abaixo).
+
+## Pendências / ordem de trabalho
+
+1. **Spike de onboarding** (shell: Tauri) — dá pra embutir Node + Claude Code
+   como sidecar (Node SEA) sem pré-requisito do usuário, disparar o login
+   (`claude setup-token`) e detectar sucesso, tudo de dentro do app?
+2. **MVP**: app de 2 botões, tools escopadas do Agent SDK, painel de
+   diff/promover offline.
+3. **Críticos herdados do protótipo** (abaixo) — a maioria já é resolvida pelo
+   desenho da Opção B, falta implementar.
+4. **Fase 2**: chat livre, UC5 (busca semântica — ver `estudos.md`, seção
+   "interessante pro projeto"), UC4/6/7.
+
+## Críticos herdados do protótipo
+
+1. **Proposta-zumbi**: resolvido pelo ciclo de vida acima (staging = outbox).
+   Falta implementar.
+2. ~~Airgap "soft"~~: resolvido pela Opção B (tools escopadas, sem bash livre).
+3. ~~Push pré-autorizado~~: resolvido pela Opção B (promover é ação da UI, não
+   comando de agente).
+4. Path do vault fixo por SO no protótipo → vira folder picker no onboarding.
+5. Sem detecção de conflito máquina-a-máquina (relevante só se UC3 entrar).
+6. Nenhum registro de sessão (`sessions.log`) — decidir se entra no MVP ou fica
+   pra depois.
+
+## Documentação relacionada
+
+- **`estudos.md`** — links de estudo por tema, o que seguir, o que foi
+  descartado e porquê.
+- **`prompts/vault-agent.md`** — regras completas do Escrivão e do Bibliotecário
+  (conservação total, voz do Gabs, convenções do vault — MOC, frontmatter). É o
+  texto que vira o system prompt das tools.
+- **`legado-windows/`** — protótipo de terminal, mantido como referência, não
+  como base de código.
