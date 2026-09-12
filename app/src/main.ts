@@ -2,6 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 
 let greetInputEl: HTMLInputElement | null;
 let greetMsgEl: HTMLElement | null;
+let loginLogEl: HTMLElement | null;
 
 async function greet() {
   if (greetMsgEl && greetInputEl) {
@@ -12,6 +13,17 @@ async function greet() {
   }
 }
 
+async function iniciarLogin() {
+  if (!loginLogEl) return;
+  loginLogEl.textContent = "Abrindo navegador pra login...";
+  try {
+    await invoke("conectar_claude");
+    loginLogEl.textContent = "Conectado! Token salvo no Keychain.";
+  } catch (err) {
+    loginLogEl.textContent = `Erro: ${err}`;
+  }
+}
+
 window.addEventListener("DOMContentLoaded", () => {
   greetInputEl = document.querySelector("#greet-input");
   greetMsgEl = document.querySelector("#greet-msg");
@@ -19,4 +31,7 @@ window.addEventListener("DOMContentLoaded", () => {
     e.preventDefault();
     greet();
   });
+
+  loginLogEl = document.querySelector("#login-log");
+  document.querySelector("#login-btn")?.addEventListener("click", iniciarLogin);
 });
