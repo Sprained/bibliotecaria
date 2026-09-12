@@ -34,6 +34,7 @@ com amigos não-técnicos".
 | 2026-09-09 | **UC3 (multi-máquina) é opcional** | quem usa numa máquina só não é forçado ao modelo de sync |
 | 2026-09-11 | Auth via **assinatura do usuário** (Agent SDK), não API key | Único caminho sem API key/billing à parte. **Correção 2026-09-12**: o crédito mensal separado ($20/$100/$200) foi anunciado pra 15/jun/2026 mas **pausado no mesmo dia**, antes de entrar em vigor — hoje o uso do Agent SDK/apps de terceiro conta no **mesmo limite** de uso do plano, mesma pool do Claude Code interativo (o que já uso pra codar esse projeto). Ver `estudos.md` §2 |
 | 2026-09-11 | Shell do app: **Tauri** (não Wails/Electron) | Sidecar de binário externo é feature oficial e documentada no Tauri (`externalBin`), enquanto no Wails é discussion aberta sem solução — risco direto pro passo 1 do spike (embutir Node). Wails v3 também ainda em beta com gates bloqueantes pra GA, e mantido por sponsors independentes (bus factor baixo) vs. Tauri com org/foundation por trás. Custo aceito: Rust fora da zona de conforto do Gabs |
+| 2026-09-12 | Identidade visual: **"biblioteca moderna"** — vinho/borgonha + creme, tema claro e escuro com peso igual | Foge do SaaS genérico (produto pra amigos, não empresa). Tipografia serifada (títulos) + sans (corpo/UI); vinho como cor de marca constante nos dois temas, ajustando luminosidade pra manter contraste em vez de dark mode forçado. Ver seção "Identidade visual" abaixo |
 
 ## Use cases
 
@@ -88,6 +89,24 @@ com amigos não-técnicos".
   Ver `estudos.md` §6.
 - **Distribuição/update**: GitHub Releases; updater nativo do shell escolhido.
   Ver `estudos.md` §9.
+
+## Identidade visual
+
+Direção "biblioteca moderna" — vinho/borgonha + creme, tema claro e escuro
+com peso igual (não é dark mode forçado, os dois são pensados juntos).
+
+- **Tipografia**: `Newsreader` (serifada, títulos) + `Archivo` (sans, corpo/UI),
+  ambas Google Fonts.
+- **Cor de marca**: vinho (matiz ~19 em oklch) constante nos dois temas — mais
+  escuro/saturado no claro (`oklch(34% 0.135 19)`), mais claro no escuro
+  (`oklch(62% 0.15 19)`) pra manter contraste em vez de usar o mesmo valor nos
+  dois. Dourado (matiz ~75-78) como accent secundário (badge do Bibliotecário,
+  indicador de "conectado").
+- **Ícones**: SVG desenhados na mão (sem emoji/dingbat) — pena pro Escrivão,
+  estante+lupa pro Bibliotecário, livro aberto como marca/wordmark.
+- **Mockup de referência**: [artefato publicado](https://claude.ai/code/artifact/9b6afbef-9c9a-4142-9c3a-5302d280ed00) —
+  4 artboards (onboarding e home, claro e escuro). Fonte dos tokens de cor
+  exatos pra quando for implementar o CSS de verdade.
 
 ## Estado atual
 
