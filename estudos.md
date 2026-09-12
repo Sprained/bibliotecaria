@@ -29,13 +29,21 @@ bash, sem acesso a path fora do escopo. Mata os críticos #2 e #3 do `task.md`.
 - Histórico do pedido (issue #559): https://github.com/anthropics/claude-agent-sdk-python/issues/559
 - Walkthrough Pro/Max + SDK: https://dev.to/aviv_shaked/how-to-use-your-claude-promax-subscription-with-the-agent-sdk-python-typescript-4emi
 
-→ **O que importa:** desde 15/jun/2026, Pro/Max/Team/Enterprise têm **crédito
-mensal separado** pro Agent SDK ($20 / $100 / $200), e ele cobre
-explicitamente "third-party apps que autenticam com a assinatura do usuário".
-Ou seja: cada amigo usa a conta dele, é caminho oficial, e o crédito é por
-conta (não compartilhável) — exatamente o modelo mono-usuário que escolhemos.
-→ ⚠️ **Verificar antes de codar:** já teve reviravolta (ban em fev/2026,
-liberado em jun/2026). Reler o help center na hora.
+→ **Atualizado 2026-09-12 (reconferido nesta sessão):** o crédito mensal
+separado ($20 Pro / $100 Max 5x / $200 Max 20x) foi anunciado pra entrar em
+vigor em 15/jun/2026, mas foi **pausado no mesmo dia**, antes de valer. Texto
+oficial do help center: *"We're pausing the changes to Claude Agent SDK
+usage... For now, nothing has changed: Claude Agent SDK, `claude -p`, and
+third-party app usage still draw from your subscription's usage limits."*
+→ **O que isso significa pro projeto:** **não existe crédito separado hoje.**
+Rodar a bibliotecária (Escrivão/Bibliotecário via Agent SDK) consome o **mesmo
+limite de uso** da assinatura que qualquer sessão interativa do Claude Code —
+inclusive a sessão usada pra codar o próprio projeto. Não muda a decisão de
+auth via assinatura (continua sendo o único caminho sem API key avulsa e
+billing à parte), só a expectativa de custo: não é uma pool extra "de graça".
+→ ⚠️ **Reconferir esse help center antes de cada milestone** — já reverteu de
+posição duas vezes (ban fev/2026 → anúncio de liberação pra jun/2026 → pausado
+no próprio dia 15/jun/2026, antes de entrar em vigor).
 
 ## 3. Login do Claude Code de dentro do app (onboarding, passo 3)
 

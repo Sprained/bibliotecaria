@@ -32,7 +32,7 @@ com amigos não-técnicos".
 | 2026-09-09 | Onboarding: **usuário não pré-instala nada** | runtime (Node/Claude Code) embutido no app via sidecar, não instalado no sistema — menos elevação/antivírus/PATH pra debugar remoto |
 | 2026-09-09 | **UC5 (busca semântica) → fase 2** | embedding + índice + modelo local offline dobra o escopo do MVP |
 | 2026-09-09 | **UC3 (multi-máquina) é opcional** | quem usa numa máquina só não é forçado ao modelo de sync |
-| 2026-09-11 | Auth via **assinatura do usuário** (Agent SDK), não API key | Anthropic libera crédito mensal de Agent SDK pra Pro/Max/Team/Enterprise cobrindo apps de terceiro (desde 15/jun/2026) — mas confirmar de novo antes de implementar, já mudou de posição uma vez (ver `estudos.md` §2) |
+| 2026-09-11 | Auth via **assinatura do usuário** (Agent SDK), não API key | Único caminho sem API key/billing à parte. **Correção 2026-09-12**: o crédito mensal separado ($20/$100/$200) foi anunciado pra 15/jun/2026 mas **pausado no mesmo dia**, antes de entrar em vigor — hoje o uso do Agent SDK/apps de terceiro conta no **mesmo limite** de uso do plano, mesma pool do Claude Code interativo (o que já uso pra codar esse projeto). Ver `estudos.md` §2 |
 | 2026-09-11 | Shell do app: **Tauri** (não Wails/Electron) | Sidecar de binário externo é feature oficial e documentada no Tauri (`externalBin`), enquanto no Wails é discussion aberta sem solução — risco direto pro passo 1 do spike (embutir Node). Wails v3 também ainda em beta com gates bloqueantes pra GA, e mantido por sponsors independentes (bus factor baixo) vs. Tauri com org/foundation por trás. Custo aceito: Rust fora da zona de conforto do Gabs |
 
 ## Use cases
@@ -91,17 +91,26 @@ com amigos não-técnicos".
 
 ## Estado atual
 
-- **Nada da Opção B foi codado.** O que existe é o protótipo de terminal (Opção
-  A), testado no Windows, guardado em `legado-windows/` como referência de
-  comportamento — não é pra evoluir, é pra não perder o que já foi validado (as
-  regras do escrivão/bibliotecário, a estrutura mirror/out/staging).
-- Próximo passo real de código: **spike de onboarding** (abaixo).
+- **Spike de onboarding resolvido tecnicamente** (nesse Mac, `aarch64-apple-darwin`):
+  app Tauri em `app/` prova que dá pra rodar o `claude` como sidecar embutido
+  (sem o usuário instalar nada), disparar `claude setup-token` de dentro do
+  app, capturar o token sem ele passar pela tela, e gravar no Keychain do
+  macOS. Falta multi-plataforma (Windows/Linux) e o binário de distribuição de
+  verdade (via optional dependency do Agent SDK, não cópia manual) — fica pra
+  fase de empacotamento/distribuição.
+- Fora isso, o que existe é o protótipo de terminal (Opção A), testado no
+  Windows, guardado em `legado-windows/` como referência de comportamento —
+  não é pra evoluir, é pra não perder o que já foi validado (as regras do
+  escrivão/bibliotecário, a estrutura mirror/out/staging).
+- Próximo passo real de código: **MVP** (app de 2 botões, tools escopadas do
+  Agent SDK, painel de diff/promover offline) — ver pendências abaixo.
 
 ## Pendências / ordem de trabalho
 
-1. **Spike de onboarding** (shell: Tauri) — dá pra embutir Node + Claude Code
-   como sidecar (Node SEA) sem pré-requisito do usuário, disparar o login
-   (`claude setup-token`) e detectar sucesso, tudo de dentro do app?
+1. ~~**Spike de onboarding**~~ — resolvido. Achado importante: `claude` já é
+   um binário nativo autocontido (não precisa de Node/SEA pra essa parte) — o
+   Agent SDK usa ele como optional dependency e spawna como subprocesso.
+   Sidecar do Tauri testado e funcionando nesse Mac.
 2. **MVP**: app de 2 botões, tools escopadas do Agent SDK, painel de
    diff/promover offline.
 3. **Críticos herdados do protótipo** (abaixo) — a maioria já é resolvida pelo
