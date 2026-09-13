@@ -13,9 +13,9 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "app",
-        "width": 800,
-        "height": 600
+        "title": "bibliotecária",
+        "width": 880,
+        "height": 640
       }
     ],
     "security": {

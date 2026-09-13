@@ -1,48 +1,111 @@
 <!doctype html>
-<html lang="en">
+<html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;1,500&family=Archivo:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="/src/styles.css" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tauri App</title>
+    <title>bibliotecária</title>
     <script type="module" src="/src/main.ts" defer></script>
   </head>
 
   <body>
-    <main class="container">
-      <h1>Welcome to Tauri</h1>
-
-      <div class="row">
-        <a href="https://vite.dev" target="_blank">
-          <img src="/src/assets/vite.svg" class="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img
-            src="/src/assets/tauri.svg"
-            class="logo tauri"
-            alt="Tauri logo"
-          />
-        </a>
-        <a href="https://www.typescriptlang.org/docs" target="_blank">
-          <img
-            src="/src/assets/typescript.svg"
-            class="logo typescript"
-            alt="typescript logo"
-          />
-        </a>
+    <main class="app">
+      <section id="view-onboarding" class="onboarding">
+      <div class="onboarding__intro">
+        <svg class="icon-book" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 5.5c2.5-1 5.5-1 8 0v13c-2.5-1-5.5-1-8 0z"/>
+          <path d="M21 5.5c-2.5-1-5.5-1-8 0v13c2.5-1 5.5-1 8 0z"/>
+        </svg>
+        <h1>bibliotecária</h1>
+        <p class="tagline">Cuida do seu vault Obsidian, com a ajuda do Claude.</p>
       </div>
-      <p>Click on the Tauri logo to learn more about the framework</p>
 
-      <form class="row" id="greet-form">
-        <input id="greet-input" placeholder="Enter a name..." />
-        <button type="submit">Greet</button>
-      </form>
-      <p id="greet-msg"></p>
+      <div class="rule"></div>
 
-      <div class="row">
-        <button id="login-btn">Conectar com Claude</button>
+      <div class="onboarding__action">
+        <button id="login-btn" class="btn-primary">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 5.5c2.5-1 5.5-1 8 0v13c-2.5-1-5.5-1-8 0z"/>
+            <path d="M21 5.5c-2.5-1-5.5-1-8 0v13c2.5-1 5.5-1 8 0z"/>
+          </svg>
+          Conectar com Claude
+        </button>
+
+        <p id="status-idle" class="status-text">Você vai fazer login pela sua conta Claude no navegador.</p>
+
+        <div id="status-loading" class="status-line" hidden>
+          <span class="spinner"></span>
+          <p class="status-text">Aguardando login no navegador…</p>
+        </div>
+
+        <div id="status-success" class="status-line" hidden>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 12.5l5 5L20 6.5"/>
+          </svg>
+          <p class="status-text">Conectado! Pronto pra começar.</p>
+        </div>
+
+        <div id="status-error" class="status-line" hidden>
+          <p id="status-error-text" class="status-text status-text--error"></p>
+        </div>
       </div>
-      <p id="login-log"></p>
+      </section>
+
+      <section id="view-home" class="home" hidden>
+        <header class="home__header">
+          <div class="home__brand">
+            <svg class="icon-book" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 5.5c2.5-1 5.5-1 8 0v13c-2.5-1-5.5-1-8 0z"/>
+              <path d="M21 5.5c-2.5-1-5.5-1-8 0v13c2.5-1 5.5-1 8 0z"/>
+            </svg>
+            <span class="home__wordmark">bibliotecária</span>
+          </div>
+          <div class="home__status-pill">
+            <span class="dot"></span>
+            <span>Conectado</span>
+          </div>
+        </header>
+
+        <div class="home__content">
+          <p class="home__prompt">O que você quer fazer?</p>
+          <div class="home__cards">
+            <button class="card" id="btn-escrivao" type="button">
+              <span class="card__icon card__icon--wine">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 4c-4.5 0-9.7 2.1-12.8 5.2C4.1 12.3 3 16 3 19c3 0 6.7-1.1 9.8-4.2C15.9 11.7 18 6.5 18 2"/>
+                  <path d="M9 15L4 20"/>
+                  <path d="M11 13c1.5-2.5 4-5 7-6"/>
+                </svg>
+              </span>
+              <h2 class="card__title">Escrivão</h2>
+              <p class="card__desc">Transforma uma nota bagunçada num texto legível — você escolhe o arquivo.</p>
+              <span class="card__cta card__cta--wine">Escolher nota →</span>
+            </button>
+
+            <button class="card" id="btn-bibliotecario" type="button">
+              <span class="card__icon card__icon--gold">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 20V6"/>
+                  <path d="M7 20V4"/>
+                  <path d="M11 20V7"/>
+                  <path d="M3 20h10"/>
+                  <circle cx="17" cy="15" r="3.2"/>
+                  <path d="M19.3 17.3L22 20"/>
+                </svg>
+              </span>
+              <h2 class="card__title">Bibliotecário</h2>
+              <p class="card__desc">Audita o vault inteiro: notas órfãs, duplicatas, links quebrados. Gera um relatório.</p>
+              <span class="card__cta card__cta--gold">Ver relatório →</span>
+            </button>
+          </div>
+        </div>
+      </section>
     </main>
   </body>
 </html>

@@ -1,37 +1,51 @@
 import { invoke } from "@tauri-apps/api/core";
 
-let greetInputEl: HTMLInputElement | null;
-let greetMsgEl: HTMLElement | null;
-let loginLogEl: HTMLElement | null;
+let onboardingEl: HTMLElement | null;
+let homeEl: HTMLElement | null;
+let idleEl: HTMLElement | null;
+let loadingEl: HTMLElement | null;
+let successEl: HTMLElement | null;
+let errorEl: HTMLElement | null;
+let errorTextEl: HTMLElement | null;
 
-async function greet() {
-  if (greetMsgEl && greetInputEl) {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    greetMsgEl.textContent = await invoke("greet", {
-      name: greetInputEl.value,
-    });
+function mostrarEstado(estado: "idle" | "aguardando" | "conectado" | "erro", mensagemErro?: string) {
+  if (!idleEl || !loadingEl || !successEl || !errorEl) return;
+  idleEl.hidden = estado !== "idle";
+  loadingEl.hidden = estado !== "aguardando";
+  successEl.hidden = estado !== "conectado";
+  errorEl.hidden = estado !== "erro";
+  if (estado === "erro" && errorTextEl) {
+    errorTextEl.textContent = mensagemErro ?? "Algo deu errado.";
+  }
+  if (estado === "conectado") {
+    setTimeout(irParaHome, 900);
   }
 }
 
+function irParaHome() {
+  if (!onboardingEl || !homeEl) return;
+  onboardingEl.hidden = true;
+  homeEl.hidden = false;
+}
+
 async function iniciarLogin() {
-  if (!loginLogEl) return;
-  loginLogEl.textContent = "Abrindo navegador pra login...";
+  mostrarEstado("aguardando");
   try {
     await invoke("conectar_claude");
-    loginLogEl.textContent = "Conectado! Token salvo no Keychain.";
+    mostrarEstado("conectado");
   } catch (err) {
-    loginLogEl.textContent = `Erro: ${err}`;
+    mostrarEstado("erro", String(err));
   }
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-  greetInputEl = document.querySelector("#greet-input");
-  greetMsgEl = document.querySelector("#greet-msg");
-  document.querySelector("#greet-form")?.addEventListener("submit", (e) => {
-    e.preventDefault();
-    greet();
-  });
+  onboardingEl = document.querySelector("#view-onboarding");
+  homeEl = document.querySelector("#view-home");
+  idleEl = document.querySelector("#status-idle");
+  loadingEl = document.querySelector("#status-loading");
+  successEl = document.querySelector("#status-success");
+  errorEl = document.querySelector("#status-error");
+  errorTextEl = document.querySelector("#status-error-text");
 
-  loginLogEl = document.querySelector("#login-log");
   document.querySelector("#login-btn")?.addEventListener("click", iniciarLogin);
 });
