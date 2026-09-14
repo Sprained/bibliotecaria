@@ -8,19 +8,28 @@ app de 2 botões, distribuição via Git). Coletados em set/2026.
 
 ---
 
-## 1. Claude Agent SDK — o núcleo da Opção B
+## 1. Execução do agente — `claude` CLI + MCP em Rust (não Agent SDK)
 
-- Overview: https://platform.claude.com/docs/en/agent-sdk/overview
-- **Custom tools** (MCP in-process, `@tool`, `create_sdk_mcp_server`, permission
-  modes): https://platform.claude.com/docs/en/agent-sdk/custom-tools
-- Referência TypeScript: https://platform.claude.com/docs/en/agent-sdk/typescript
-- Python repo: https://github.com/anthropics/claude-agent-sdk-python
-- TS repo: https://github.com/anthropics/claude-agent-sdk-typescript
+- `claude --help` (flags confirmadas na sessão 2026-09-13, rodando local):
+  `-p`/`--print` (non-interactive), `--mcp-config`, `--strict-mcp-config`,
+  `--tools` (`""` desliga tudo), `--permission-mode` (inclui `dontAsk`),
+  `--permission-prompts` (`host`/`none`), `--output-format stream-json`.
+- **rmcp** — SDK oficial Rust do Model Context Protocol, macro `#[tool]`,
+  transporte stdio pronto: https://github.com/modelcontextprotocol/rust-sdk
+  / https://crates.io/crates/rmcp
+- Guia prático rmcp + Claude Code: https://systemprompt.io/guides/build-mcp-server-rust
+- Guia stdio MCP em Rust (Shuttle.dev): https://www.shuttle.dev/blog/2025/07/18/how-to-build-a-stdio-mcp-server-in-rust
+- Doc oficial sobre MCP no Claude Code: https://code.claude.com/docs/en/agent-sdk/mcp
 
-→ **SEGUIR: `custom-tools`.** É o coração do airgap duro — a bibliotecária
-expõe só `ler_mirror` / `listar_mirror` / `escrever_out` como tools in-process,
-e roda no permission mode `dontAsk` (nega tudo que não foi pré-aprovado). Sem
-bash, sem acesso a path fora do escopo. Mata os críticos #2 e #3 do `task.md`.
+→ **SEGUIR:** `claude -p "<prompt>" --mcp-config <config.json>
+--strict-mcp-config --tools "" --permission-mode dontAsk --output-format
+stream-json`. `--tools ""` desliga toda tool nativa (Bash, Read, Write,
+Edit...); o servidor MCP nosso (binário Rust separado, via `rmcp`) expõe só
+`ler_mirror` / `listar_mirror` / `escrever_out`. Airgap duro sem precisar de
+Node/Agent SDK — mata os críticos #2 e #3 do protótipo antigo (`legado-windows/`).
+→ ⚠️ **Verificar na prática antes de confiar em produção**: como exatamente
+`dontAsk` resolve uma chamada de tool MCP sem humano no loop (aprova
+automático ou nega?) — testar isoladamente antes de destravar o resto.
 
 ## 2. Auth com a assinatura (sem API key)
 
@@ -123,6 +132,13 @@ usa `electron-updater`.
 
 ## Descartado (registrando o porquê)
 
+- **Claude Agent SDK (TS/Python)** —
+  https://platform.claude.com/docs/en/agent-sdk/overview e
+  https://platform.claude.com/docs/en/agent-sdk/custom-tools — decisão
+  2026-09-13: exigiria um processo Node/Python extra só pra hospedar as tools
+  in-process (`@tool`/`create_sdk_mcp_server`). `claude` CLI puro (`-p`) +
+  servidor MCP em Rust (`rmcp`) dá o mesmo airgap sem esse runtime extra, e
+  mantém o backend 100% Rust (ver §1).
 - **API Messages crua** — https://platform.claude.com/docs/en/api/messages —
   exige API key com billing à parte. Fora: queremos rodar na assinatura.
 - **`pkg` da Vercel** — https://github.com/vercel/pkg — arquivado jan/2024,

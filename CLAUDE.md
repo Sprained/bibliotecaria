@@ -35,6 +35,7 @@ com amigos não-técnicos".
 | 2026-09-11 | Auth via **assinatura do usuário** (Agent SDK), não API key | Único caminho sem API key/billing à parte. **Correção 2026-09-12**: o crédito mensal separado ($20/$100/$200) foi anunciado pra 15/jun/2026 mas **pausado no mesmo dia**, antes de entrar em vigor — hoje o uso do Agent SDK/apps de terceiro conta no **mesmo limite** de uso do plano, mesma pool do Claude Code interativo (o que já uso pra codar esse projeto). Ver `estudos.md` §2 |
 | 2026-09-11 | Shell do app: **Tauri** (não Wails/Electron) | Sidecar de binário externo é feature oficial e documentada no Tauri (`externalBin`), enquanto no Wails é discussion aberta sem solução — risco direto pro passo 1 do spike (embutir Node). Wails v3 também ainda em beta com gates bloqueantes pra GA, e mantido por sponsors independentes (bus factor baixo) vs. Tauri com org/foundation por trás. Custo aceito: Rust fora da zona de conforto do Gabs |
 | 2026-09-12 | Identidade visual: **"biblioteca moderna"** — vinho/borgonha + creme, tema claro e escuro com peso igual | Foge do SaaS genérico (produto pra amigos, não empresa). Tipografia serifada (títulos) + sans (corpo/UI); vinho como cor de marca constante nos dois temas, ajustando luminosidade pra manter contraste em vez de dark mode forçado. Ver seção "Identidade visual" abaixo |
+| 2026-09-13 | Backend do agente: **`claude` CLI puro (`-p`) + servidor MCP nosso em Rust (`rmcp`)**, não Agent SDK (TS/Python) | `--mcp-config` + `--strict-mcp-config` + `--tools ""` + `--permission-mode dontAsk` dá o mesmo airgap duro (zero tools nativas, só as 3 registradas) sem precisar de um processo Node hospedando o SDK. Mantém o backend 100% Rust — bate com o objetivo do Gabs de praticar Rust, e elimina de vez a necessidade de Node SEA em qualquer parte do app |
 
 ## Use cases
 
@@ -71,20 +72,24 @@ com amigos não-técnicos".
 
 ## Arquitetura
 
-- **Execução do agente**: Claude Agent SDK, tools *in-process* (`ler_mirror`,
-  `listar_mirror`, `escrever_out`), permission mode `dontAsk` — nega qualquer
-  coisa fora dessas três. Ver `estudos.md` §1.
+- **Execução do agente**: `claude` CLI em modo `-p` (print/non-interactive),
+  não Agent SDK. Tools escopadas (`ler_mirror`, `listar_mirror`,
+  `escrever_out`) viram um **servidor MCP em Rust** (crate `rmcp`), registrado
+  via `--mcp-config` + `--strict-mcp-config`. `--tools ""` desliga toda tool
+  nativa (Bash, Read, Write, Edit...); `--permission-mode dontAsk` decide o
+  resto. Zero Node em qualquer parte do app, backend 100% Rust. Ver
+  `estudos.md` §1.
 - **Prompt de cada modo**: hoje escrivão e bibliotecário vivem juntos em
   `prompts/vault-agent.md` (herdado do protótipo). **A decidir**: separar em dois
   arquivos/system-prompts quando a UI virar "2 botões", ou manter um com seleção
   de modo por parâmetro.
 - **Auth**: `claude setup-token` disparado pelo app → token OAuth de 1 ano
-  guardado no keychain do SO. Consome o crédito de Agent SDK da assinatura do
-  usuário, não API key. Ver `estudos.md` §2 e §3.
+  guardado no keychain do SO. Consome o limite de uso normal da assinatura do
+  usuário, mesma pool do Claude Code interativo. Ver `estudos.md` §2 e §3.
 - **Shell do app**: **Tauri**. Ver `estudos.md` §4.
-- **Runtime embutido**: Claude Code + Agent SDK entram como *sidecar* do Tauri
-  (`externalBin`), compilado com Node SEA (não `pkg`, arquivado). Ver
-  `estudos.md` §5.
+- **Runtime embutido**: só o binário `claude` (nativo, autocontido) como
+  *sidecar* do Tauri (`externalBin`) — validado no spike. Sem Node/SEA em
+  nenhuma parte do app.
 - **UI de diff/promover**: CodeMirror 6 + `@codemirror/merge`, roda 100% offline.
   Ver `estudos.md` §6.
 - **Distribuição/update**: GitHub Releases; updater nativo do shell escolhido.
