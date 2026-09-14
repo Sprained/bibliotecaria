@@ -1,0 +1,19 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Tauri Development Debug",
+      "cargo": {
+        "args": [
+          "build",
+          "--manifest-path=./app/src-tauri/Cargo.toml",
+          "--no-default-features"
+        ]
+      },
+      "cwd": "${workspaceFolder}/app/src-tauri",
+      "preLaunchTask": "ui:dev"
+    }
+  ]
+}

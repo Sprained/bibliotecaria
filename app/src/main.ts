@@ -31,7 +31,7 @@ function irParaHome() {
 async function iniciarLogin() {
   mostrarEstado("aguardando");
   try {
-    await invoke("conectar_claude");
+    await invoke("connect_claude");
     mostrarEstado("conectado");
   } catch (err) {
     mostrarEstado("erro", String(err));
