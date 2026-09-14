@@ -27,3 +27,35 @@ pub async fn connect_claude(app: tauri::AppHandle) -> Result<(), String> {
 
     Err("processo encerrado sem token".into())
 }
+
+fn has_saved_token(service: &str, account: &str) -> bool {
+    match Entry::new(service, account) {
+        Ok(entry) => entry.get_password().is_ok(),
+        Err(_) => false,
+    }
+}
+
+#[tauri::command]
+pub fn is_connected() -> bool {
+    has_saved_token("bibliotecaria", "claude_code_oauth_token")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn detects_no_saved_token() {
+        assert!(!has_saved_token("bibliotecaria-test", "chave-inexistente"));
+    }
+
+    #[test]
+    fn detects_saved_token() {
+        let entry = Entry::new("bibliotecaria-test", "chave-existente").unwrap();
+        entry.set_password("valor-fake").unwrap();
+
+        assert!(has_saved_token("bibliotecaria-test", "chave-existente"));
+
+        entry.delete_credential().unwrap();
+    }
+}

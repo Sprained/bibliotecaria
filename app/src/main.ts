@@ -38,7 +38,7 @@ async function iniciarLogin() {
   }
 }
 
-window.addEventListener("DOMContentLoaded", () => {
+window.addEventListener("DOMContentLoaded", async () => {
   onboardingEl = document.querySelector("#view-onboarding");
   homeEl = document.querySelector("#view-home");
   idleEl = document.querySelector("#status-idle");
@@ -48,4 +48,9 @@ window.addEventListener("DOMContentLoaded", () => {
   errorTextEl = document.querySelector("#status-error-text");
 
   document.querySelector("#login-btn")?.addEventListener("click", iniciarLogin);
+
+  const jaConectado = await invoke("is_connected");
+  if (jaConectado) {
+    irParaHome();
+  }
 });
