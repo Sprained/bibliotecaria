@@ -168,5 +168,6 @@ com peso igual (não é dark mode forçado, os dois são pensados juntos).
 - **`app/src-tauri/scripts/test-mcp.sh`** — testa um binário de servidor MCP
   (tipo o `vault_mcp`) na mão, mandando mensagens JSON-RPC direto pelo stdin,
   sem precisar do `claude` de verdade. Uso:
-  `test-mcp.sh <binário> <argumento> <arquivo.jsonl>` — ver
-  `vault-mcp-smoke.jsonl` de exemplo.
+  `test-mcp.sh <binário> <arquivo.jsonl> [argumentos-do-binário...]` — ver
+  `vault-mcp-smoke.jsonl` de exemplo (cobre `list_mirror`, `read_mirror` —
+  incluindo tentativa de path traversal — e `write_out`).

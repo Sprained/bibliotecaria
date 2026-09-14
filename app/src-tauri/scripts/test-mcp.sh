@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 # Testa um binário de servidor MCP na mão, sem precisar do `claude` de verdade.
-# Uso: ./test-mcp.sh <caminho-do-binario> <argumento-do-binario> <arquivo-de-mensagens.jsonl>
+# Uso: ./test-mcp.sh <caminho-do-binario> <arquivo-de-mensagens.jsonl> [argumentos-do-binario...]
 set -euo pipefail
 
 BIN="$1"
-ARG="$2"
-INPUT="$3"
+INPUT="$2"
+shift 2
 
 OUT=$(mktemp)
 ERR=$(mktemp)
 
-(cat "$INPUT"; sleep 2) | "$BIN" "$ARG" > "$OUT" 2> "$ERR" &
+(cat "$INPUT"; sleep 2) | "$BIN" "$@" > "$OUT" 2> "$ERR" &
 PID=$!
 sleep 3
 kill "$PID" 2>/dev/null || true
