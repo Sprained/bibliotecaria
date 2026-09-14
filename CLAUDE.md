@@ -163,3 +163,8 @@ com peso igual (não é dark mode forçado, os dois são pensados juntos).
   texto que vira o system prompt das tools.
 - **`legado-windows/`** — protótipo de terminal, mantido como referência, não
   como base de código.
+- **`app/src-tauri/scripts/test-mcp.sh`** — testa um binário de servidor MCP
+  (tipo o `vault_mcp`) na mão, mandando mensagens JSON-RPC direto pelo stdin,
+  sem precisar do `claude` de verdade. Uso:
+  `test-mcp.sh <binário> <argumento> <arquivo.jsonl>` — ver
+  `vault-mcp-smoke.jsonl` de exemplo.
