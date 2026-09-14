@@ -22,14 +22,20 @@ app de 2 botões, distribuição via Git). Coletados em set/2026.
 - Doc oficial sobre MCP no Claude Code: https://code.claude.com/docs/en/agent-sdk/mcp
 
 → **SEGUIR:** `claude -p "<prompt>" --mcp-config <config.json>
---strict-mcp-config --tools "" --permission-mode dontAsk --output-format
-stream-json`. `--tools ""` desliga toda tool nativa (Bash, Read, Write,
-Edit...); o servidor MCP nosso (binário Rust separado, via `rmcp`) expõe só
-`ler_mirror` / `listar_mirror` / `escrever_out`. Airgap duro sem precisar de
-Node/Agent SDK — mata os críticos #2 e #3 do protótipo antigo (`legado-windows/`).
-→ ⚠️ **Verificar na prática antes de confiar em produção**: como exatamente
-`dontAsk` resolve uma chamada de tool MCP sem humano no loop (aprova
-automático ou nega?) — testar isoladamente antes de destravar o resto.
+--strict-mcp-config --tools "" --permission-mode bypassPermissions
+--output-format stream-json`. `--tools ""` desliga toda tool nativa (Bash,
+Read, Write, Edit...); o servidor MCP nosso (binário Rust separado, via
+`rmcp`) expõe só `ler_mirror` / `listar_mirror` / `escrever_out`. Airgap duro
+sem precisar de Node/Agent SDK — mata os críticos #2 e #3 do protótipo antigo
+(`legado-windows/`).
+→ ✅ **Testado na prática (2026-09-14)**: `dontAsk` **nega** silenciosamente
+qualquer tool que precisaria de aprovação — faz sentido, é modo headless, não
+tem terminal pra perguntar, então a resposta segura é negar em vez de
+auto-aprovar. Quem auto-aprova de fato é `bypassPermissions`. Isso não reabre
+o airgap: como `--tools ""` + `--strict-mcp-config` já limitam o universo de
+tools às 3 nossas, "bypass" só pula a pergunta pra elas — não existe
+Bash/Read nativo pra "bypassar". Validado com `list_mirror` via `vault_mcp`
+rodando de verdade sob `claude -p`.
 
 ## 2. Auth com a assinatura (sem API key)
 
