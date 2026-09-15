@@ -14,6 +14,7 @@ let errorTextEl: HTMLElement | null;
 let vaultLoadingEl: HTMLElement | null;
 let vaultErrorEl: HTMLElement | null;
 let vaultErrorTextEl: HTMLElement | null;
+let homeBannerEl: HTMLElement | null;
 
 function mostrarEstado(estado: "idle" | "aguardando" | "conectado" | "erro", mensagemErro?: string) {
   if (!idleEl || !loadingEl || !successEl || !errorEl) return;
@@ -76,6 +77,37 @@ async function escolherVault() {
   }
 }
 
+function mostrarBannerHome(mensagem: string | null, erro = false) {
+  if (!homeBannerEl) return;
+  if (!mensagem) {
+    homeBannerEl.hidden = true;
+    return;
+  }
+  homeBannerEl.textContent = mensagem;
+  homeBannerEl.hidden = false;
+  homeBannerEl.classList.toggle("home__banner--error", erro);
+  if (!erro) {
+    setTimeout(() => {
+      homeBannerEl!.hidden = true;
+    }, 3000);
+  }
+}
+
+async function trocarVault() {
+  const pasta = await open({ directory: true, title: "Escolha a nova pasta do vault" });
+  if (!pasta) return;
+
+  const confirmado = window.confirm(`Trocar o vault para "${pasta}"? O mirror atual será substituído.`);
+  if (!confirmado) return;
+
+  try {
+    const stats = await invoke<{ notes: number; bytes: number }>("set_vault_path", { vaultPath: pasta });
+    mostrarBannerHome(`Vault atualizado — ${stats.notes} notas sincronizadas.`);
+  } catch (err) {
+    mostrarBannerHome(String(err), true);
+  }
+}
+
 window.addEventListener("DOMContentLoaded", async () => {
   onboardingEl = document.querySelector("#view-onboarding");
   vaultEl = document.querySelector("#view-vault");
@@ -88,9 +120,11 @@ window.addEventListener("DOMContentLoaded", async () => {
   vaultLoadingEl = document.querySelector("#vault-status-loading");
   vaultErrorEl = document.querySelector("#vault-status-error");
   vaultErrorTextEl = document.querySelector("#vault-status-error-text");
+  homeBannerEl = document.querySelector("#home-banner");
 
   document.querySelector("#login-btn")?.addEventListener("click", iniciarLogin);
   document.querySelector("#pick-vault-btn")?.addEventListener("click", escolherVault);
+  document.querySelector("#change-vault-btn")?.addEventListener("click", trocarVault);
 
   const jaConectado = await invoke("is_connected");
   if (jaConectado) {

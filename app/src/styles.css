@@ -142,6 +142,32 @@ h1 {
 }
 .home__status-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--gold); display: inline-block; }
 
+.home__header-actions { display: flex; align-items: center; gap: 14px; }
+
+.link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.link-btn:hover { color: var(--wine); }
+
+.home__banner {
+  margin: 0;
+  padding: 10px 32px;
+  font-size: 13px;
+  text-align: center;
+  background: var(--gold-tint-bg);
+  color: var(--ink);
+}
+.home__banner--error { background: var(--wine-tint-bg); color: var(--wine); }
+
 .home__content { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 36px; padding: 40px; }
 .home__prompt { font-family: var(--font-serif); font-style: italic; font-size: 17px; color: var(--ink-muted); margin: 0; }
 .home__cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px; width: min(100%, 800px); }
