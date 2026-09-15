@@ -1,5 +1,5 @@
 use crate::commands::auth::get_saved_token;
-use crate::commands::vault::{mirror_dir, out_dir};
+use crate::commands::vault::{get_vault_path, mirror_dir, out_dir, sync_now};
 use serde_json::json;
 use std::path::{Path, PathBuf};
 use tauri::AppHandle;
@@ -8,9 +8,12 @@ use tauri_plugin_shell::ShellExt;
 
 const SHARED_PROMPT: &str = include_str!("../../../../prompts/shared.md");
 const BIBLIOTECARIO_PROMPT: &str = include_str!("../../../../prompts/bibliotecario.md");
+const ESCRIVAO_PROMPT: &str = include_str!("../../../../prompts/escrivao.md");
 
 #[tauri::command]
 pub async fn run_bibliotecario(app: AppHandle) -> Result<String, String> {
+    sync_now(app.clone())?;
+
     let system_prompt = format!("{SHARED_PROMPT}\n\n{BIBLIOTECARIO_PROMPT}");
     run_agent(
         &app,
@@ -18,6 +21,30 @@ pub async fn run_bibliotecario(app: AppHandle) -> Result<String, String> {
         "Audite o vault e gere o relatório do bibliotecário.",
     )
     .await
+}
+
+#[tauri::command]
+pub async fn run_escrivao(app: AppHandle, note_path: String) -> Result<String, String> {
+    sync_now(app.clone())?;
+
+    let vault_path =
+        get_vault_path(app.clone()).ok_or_else(|| "nenhum vault configurado".to_string())?;
+    let relative = relative_to_vault(&vault_path, &note_path)?;
+
+    let system_prompt = format!("{SHARED_PROMPT}\n\n{ESCRIVAO_PROMPT}");
+    let prompt = format!("Reescreva a nota `{relative}` seguindo o modo escrivão.");
+    run_agent(&app, &system_prompt, &prompt).await
+}
+
+fn relative_to_vault(vault_path: &str, note_path: &str) -> Result<String, String> {
+    let vault_abs = std::fs::canonicalize(vault_path).map_err(|e| e.to_string())?;
+    let note_abs = std::fs::canonicalize(note_path).map_err(|e| e.to_string())?;
+
+    let relative = note_abs.strip_prefix(&vault_abs).map_err(|_| {
+        "A nota escolhida precisa estar dentro do vault selecionado.".to_string()
+    })?;
+
+    Ok(relative.to_string_lossy().to_string())
 }
 
 fn vault_mcp_path() -> Result<PathBuf, String> {

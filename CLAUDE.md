@@ -131,25 +131,30 @@ com peso igual (não é dark mode forçado, os dois são pensados juntos).
   `set_vault_path`/`sync_now`), path do vault persistido via
   `tauri-plugin-store`, escolha de pasta via `tauri-plugin-dialog` no
   onboarding, botão "Trocar vault" na home.
-- **Botão Bibliotecário funcionando ponta a ponta com vault real** (validado
-  2026-09-15): clique na home dispara `run_bibliotecario` (novo
-  `commands/agent.rs`), que sobe `claude -p` com `--system-prompt`
-  (`prompts/shared.md` + `prompts/bibliotecario.md` embutidos via
-  `include_str!`) + `--mcp-config` inline apontando pro `vault_mcp` +
+- **Os 2 botões (Bibliotecário e Escrivão) funcionando ponta a ponta com
+  vault real** (validado 2026-09-15): `commands/agent.rs` sobe `claude -p`
+  com `--system-prompt` (`prompts/shared.md` + o modo específico, embutidos
+  via `include_str!`) + `--mcp-config` inline apontando pro `vault_mcp` +
   `--strict-mcp-config` + `--tools ""` + `--permission-mode
   bypassPermissions`, token OAuth passado via `.env()` (nunca na linha de
-  comando). Agente auditou o vault de verdade, achou notas órfãs, MOC fora de
-  convenção, referência morta e escreveu o relatório em `out/`. Rodar num
-  vault real leva minutos (lê nota por nota) — UI avisa isso agora. Botão
-  Escrivão ainda não está ligado (precisa de seletor de nota — próxima
-  fatia).
+  comando). Os dois comandos resincronizam o mirror antes de rodar
+  (`sync_now`), pra não trabalhar em cima de conteúdo desatualizado.
+  - **Bibliotecário**: auditou o vault de verdade via `list_mirror`/
+    `read_mirror`, achou notas órfãs, MOC fora de convenção, referência
+    morta, e escreveu o relatório em `out/`.
+  - **Escrivão**: picker nativo filtrado por `.md`, começando na pasta do
+    vault (`@tauri-apps/plugin-dialog`). Rust calcula o caminho relativo ao
+    vault (`canonicalize` dos dois lados + `strip_prefix`, com erro se a
+    nota escolhida cair fora do vault) e manda pro agente reescrever via
+    `read_mirror`/`write_out`.
+  - Rodar num vault real leva minutos (lê nota por nota) — UI avisa isso.
 - Fora isso, o que existe é o protótipo de terminal (Opção A), testado no
   Windows, guardado em `legado-windows/` como referência de comportamento —
   não é pra evoluir, é pra não perder o que já foi validado (as regras do
   escrivão/bibliotecário, a estrutura mirror/out/staging).
-- Próximo passo real de código: **MVP** (app de 2 botões, chamando o
-  servidor MCP via `claude -p`, painel de diff/promover offline) — ver
-  pendências abaixo.
+- Próximo passo real de código: falta só o **painel de diff/promover
+  offline** pra fechar o MVP (os 2 botões já chamam o agente de verdade) —
+  ver pendências abaixo.
 
 ## Pendências / ordem de trabalho
 
@@ -157,9 +162,12 @@ com peso igual (não é dark mode forçado, os dois são pensados juntos).
    um binário nativo autocontido (não precisa de Node/SEA pra essa parte) — o
    Agent SDK usa ele como optional dependency e spawna como subprocesso.
    Sidecar do Tauri testado e funcionando nesse Mac.
-2. **MVP**: app de 2 botões, tools escopadas via servidor MCP em Rust
-   (`list_mirror`/`read_mirror`/`write_out` — prontas e testadas), painel de
-   diff/promover offline.
+2. **MVP**: ~~app de 2 botões, tools escopadas via servidor MCP em Rust~~ —
+   resolvido e validado com vault real (`list_mirror`/`read_mirror`/
+   `write_out`, Bibliotecário e Escrivão funcionando ponta a ponta). Falta só
+   o **painel de diff/promover offline** (CodeMirror 6) pra fechar o MVP —
+   hoje as propostas ficam em `out/` sem UI de revisão, só dá pra abrir o
+   arquivo na mão.
 3. **Críticos herdados do protótipo** (abaixo) — a maioria já é resolvida pelo
    desenho da Opção B, falta implementar.
 4. **Fase 2**: chat livre, UC5 (busca semântica — ver `estudos.md`, seção

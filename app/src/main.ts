@@ -132,6 +132,29 @@ async function trocarVault() {
   }
 }
 
+async function rodarEscrivao() {
+  const vaultPath = await invoke<string | null>("get_vault_path");
+  const nota = await open({
+    directory: false,
+    multiple: false,
+    defaultPath: vaultPath ?? undefined,
+    filters: [{ name: "Markdown", extensions: ["md"] }],
+    title: "Escolha a nota pra reescrever",
+  });
+  if (!nota) return;
+
+  definirCardsDesabilitados(true);
+  mostrarBannerHome(`Reescrevendo "${nota}"… pode levar um tempo.`, false, false);
+  try {
+    const resultado = await invoke<string>("run_escrivao", { notePath: nota });
+    mostrarBannerHome(resultado || "Escrivão terminou, mas não retornou texto.", false, false);
+  } catch (err) {
+    mostrarBannerHome(String(err), true, false);
+  } finally {
+    definirCardsDesabilitados(false);
+  }
+}
+
 window.addEventListener("DOMContentLoaded", async () => {
   onboardingEl = document.querySelector("#view-onboarding");
   vaultEl = document.querySelector("#view-vault");
@@ -150,6 +173,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   document.querySelector("#pick-vault-btn")?.addEventListener("click", escolherVault);
   document.querySelector("#change-vault-btn")?.addEventListener("click", trocarVault);
   document.querySelector("#btn-bibliotecario")?.addEventListener("click", rodarBibliotecario);
+  document.querySelector("#btn-escrivao")?.addEventListener("click", rodarEscrivao);
 
   const jaConectado = await invoke("is_connected");
   if (jaConectado) {
