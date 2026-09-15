@@ -1,6 +1,7 @@
 mod commands;
 mod mirror;
 
+use commands::agent::run_bibliotecario;
 use commands::auth::{connect_claude, is_connected};
 use commands::vault::{get_vault_path, set_vault_path, sync_now};
 
@@ -16,7 +17,8 @@ pub fn run() {
             is_connected,
             get_vault_path,
             set_vault_path,
-            sync_now
+            sync_now,
+            run_bibliotecario
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

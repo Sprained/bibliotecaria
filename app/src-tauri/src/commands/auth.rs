@@ -40,6 +40,12 @@ pub fn is_connected() -> bool {
     has_saved_token("bibliotecaria", "claude_code_oauth_token")
 }
 
+pub fn get_saved_token() -> Result<String, String> {
+    let entry =
+        Entry::new("bibliotecaria", "claude_code_oauth_token").map_err(|e| e.to_string())?;
+    entry.get_password().map_err(|e| e.to_string())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

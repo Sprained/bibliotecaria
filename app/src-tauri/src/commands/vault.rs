@@ -1,12 +1,13 @@
 use crate::mirror::{self, StaticSync};
 use serde_json::json;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use tauri::{AppHandle, Manager};
 use tauri_plugin_store::StoreExt;
 
 const CONFIG_STORE: &str = "config.json";
 const VAULT_PATH_KEY: &str = "vault_path";
 const MIRROR_DIR_NAME: &str = "mirror";
+const OUT_DIR_NAME: &str = "out";
 
 #[tauri::command]
 pub fn get_vault_path(app: AppHandle) -> Option<String> {
@@ -30,12 +31,24 @@ pub fn sync_now(app: AppHandle) -> Result<StaticSync, String> {
     run_sync(&app, &vault_path)
 }
 
-fn run_sync(app: &AppHandle, vault_path: &str) -> Result<StaticSync, String> {
-    let mirror_dir = app
+pub fn mirror_dir(app: &AppHandle) -> Result<PathBuf, String> {
+    Ok(app
         .path()
         .app_data_dir()
         .map_err(|e| e.to_string())?
-        .join(MIRROR_DIR_NAME);
+        .join(MIRROR_DIR_NAME))
+}
 
-    mirror::synchronize(Path::new(vault_path), &mirror_dir)
+pub fn out_dir(app: &AppHandle) -> Result<PathBuf, String> {
+    let dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| e.to_string())?
+        .join(OUT_DIR_NAME);
+    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    Ok(dir)
+}
+
+fn run_sync(app: &AppHandle, vault_path: &str) -> Result<StaticSync, String> {
+    mirror::synchronize(Path::new(vault_path), &mirror_dir(app)?)
 }

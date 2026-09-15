@@ -81,10 +81,12 @@ com amigos não-técnicos".
   aprova automático as tools que existem — só as 3 nossas, já que não há
   Bash/Read nativo pra bypassar. Zero Node em qualquer parte do app, backend
   100% Rust. Ver `estudos.md` §1.
-- **Prompt de cada modo**: hoje escrivão e bibliotecário vivem juntos em
-  `prompts/vault-agent.md` (herdado do protótipo). **A decidir**: separar em dois
-  arquivos/system-prompts quando a UI virar "2 botões", ou manter um com seleção
-  de modo por parâmetro.
+- **Prompt de cada modo** (decidido 2026-09-15, quando a UI virou "2 botões"
+  de verdade): `prompts/shared.md` (Limite absoluto, Convenções do vault,
+  Formato da resposta) + `prompts/escrivao.md` + `prompts/bibliotecario.md`,
+  cada um só com a seção específica do modo. Rust concatena `shared + modo`
+  na hora de montar o `--system-prompt`. Zero duplicação de regra de
+  governança entre os dois modos.
 - **Auth**: `claude setup-token` disparado pelo app → token OAuth de 1 ano
   guardado no keychain do SO. Consome o limite de uso normal da assinatura do
   usuário, mesma pool do Claude Code interativo. Ver `estudos.md` §2 e §3.
@@ -125,17 +127,22 @@ com peso igual (não é dark mode forçado, os dois são pensados juntos).
   verdade (via optional dependency do Agent SDK, não cópia manual) — fica pra
   fase de empacotamento/distribuição.
 - **Sincronização do mirror e escolha de vault resolvidas**: `mirror::synchronize`
-  (testado) agora é chamado por comandos Tauri reais (`get_vault_path`/
+  (testado) é chamado por comandos Tauri reais (`get_vault_path`/
   `set_vault_path`/`sync_now`), path do vault persistido via
   `tauri-plugin-store`, escolha de pasta via `tauri-plugin-dialog` no
-  onboarding. Falta UI pra trocar de vault depois de escolhido (ver críticos
-  herdados, item 4).
-- **Servidor MCP em Rust com as 3 tools prontas e testadas** (`list_mirror`,
-  `read_mirror`, `write_out`), validado rodando de verdade sob `claude -p`
-  com `--mcp-config` + `--strict-mcp-config` + `--tools ""` +
-  `--permission-mode bypassPermissions`. Falta plugar isso no fluxo real do
-  app (hoje só é chamado manualmente via `scripts/test-mcp.sh` ou `claude -p`
-  direto no terminal).
+  onboarding, botão "Trocar vault" na home.
+- **Botão Bibliotecário funcionando ponta a ponta com vault real** (validado
+  2026-09-15): clique na home dispara `run_bibliotecario` (novo
+  `commands/agent.rs`), que sobe `claude -p` com `--system-prompt`
+  (`prompts/shared.md` + `prompts/bibliotecario.md` embutidos via
+  `include_str!`) + `--mcp-config` inline apontando pro `vault_mcp` +
+  `--strict-mcp-config` + `--tools ""` + `--permission-mode
+  bypassPermissions`, token OAuth passado via `.env()` (nunca na linha de
+  comando). Agente auditou o vault de verdade, achou notas órfãs, MOC fora de
+  convenção, referência morta e escreveu o relatório em `out/`. Rodar num
+  vault real leva minutos (lê nota por nota) — UI avisa isso agora. Botão
+  Escrivão ainda não está ligado (precisa de seletor de nota — próxima
+  fatia).
 - Fora isso, o que existe é o protótipo de terminal (Opção A), testado no
   Windows, guardado em `legado-windows/` como referência de comportamento —
   não é pra evoluir, é pra não perder o que já foi validado (as regras do
@@ -167,20 +174,26 @@ com peso igual (não é dark mode forçado, os dois são pensados juntos).
    comando de agente).
 4. ~~Path do vault fixo por SO no protótipo~~: resolvido — folder picker no
    onboarding (`tauri-plugin-dialog`) + path salvo via `tauri-plugin-store`,
-   sincroniza o mirror na escolha. **Gap novo**: não tem UI pra trocar de
-   vault depois de escolhido (só editando o `config.json` na mão ou
-   reinstalando). Falta decidir onde esse botão mora (home? configurações?).
+   sincroniza o mirror na escolha, e botão "Trocar vault" na home pra mudar
+   depois.
 5. Sem detecção de conflito máquina-a-máquina (relevante só se UC3 entrar).
 6. Nenhum registro de sessão (`sessions.log`) — decidir se entra no MVP ou fica
    pra depois.
+7. **`vault_mcp` não tem empacotamento de verdade**: hoje o caminho do
+   binário é resolvido como "vizinho" do executável principal
+   (`current_exe().parent()`), o que só funciona em dev porque os dois
+   binários caem em `target/debug/`. Precisa virar sidecar/resource de
+   verdade (mesmo tratamento que o `claude` binário) antes de empacotar pra
+   distribuição.
 
 ## Documentação relacionada
 
 - **`estudos.md`** — links de estudo por tema, o que seguir, o que foi
   descartado e porquê.
-- **`prompts/vault-agent.md`** — regras completas do Escrivão e do Bibliotecário
-  (conservação total, voz do Gabs, convenções do vault — MOC, frontmatter). É o
-  texto que vira o system prompt das tools.
+- **`prompts/shared.md` + `prompts/escrivao.md` + `prompts/bibliotecario.md`**
+  — regras completas do Escrivão e do Bibliotecário (conservação total, voz
+  do Gabs, convenções do vault — MOC, frontmatter). É o texto que vira o
+  `--system-prompt` de cada modo (shared + modo específico, concatenados).
 - **`legado-windows/`** — protótipo de terminal, mantido como referência, não
   como base de código.
 - **`app/src-tauri/scripts/test-mcp.sh`** — testa um binário de servidor MCP

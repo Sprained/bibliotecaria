@@ -77,7 +77,7 @@ async function escolherVault() {
   }
 }
 
-function mostrarBannerHome(mensagem: string | null, erro = false) {
+function mostrarBannerHome(mensagem: string | null, erro = false, autoHide = true) {
   if (!homeBannerEl) return;
   if (!mensagem) {
     homeBannerEl.hidden = true;
@@ -86,10 +86,34 @@ function mostrarBannerHome(mensagem: string | null, erro = false) {
   homeBannerEl.textContent = mensagem;
   homeBannerEl.hidden = false;
   homeBannerEl.classList.toggle("home__banner--error", erro);
-  if (!erro) {
+  if (autoHide && !erro) {
     setTimeout(() => {
       homeBannerEl!.hidden = true;
     }, 3000);
+  }
+}
+
+function definirCardsDesabilitados(desabilitado: boolean) {
+  const escrivao = document.querySelector<HTMLButtonElement>("#btn-escrivao");
+  const bibliotecario = document.querySelector<HTMLButtonElement>("#btn-bibliotecario");
+  if (escrivao) escrivao.disabled = desabilitado;
+  if (bibliotecario) bibliotecario.disabled = desabilitado;
+}
+
+async function rodarBibliotecario() {
+  definirCardsDesabilitados(true);
+  mostrarBannerHome(
+    "Rodando auditoria do bibliotecário… pode levar alguns minutos num vault grande, já que ele lê nota por nota.",
+    false,
+    false,
+  );
+  try {
+    const resultado = await invoke<string>("run_bibliotecario");
+    mostrarBannerHome(resultado || "Bibliotecário terminou, mas não retornou texto.", false, false);
+  } catch (err) {
+    mostrarBannerHome(String(err), true, false);
+  } finally {
+    definirCardsDesabilitados(false);
   }
 }
 
@@ -125,6 +149,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   document.querySelector("#login-btn")?.addEventListener("click", iniciarLogin);
   document.querySelector("#pick-vault-btn")?.addEventListener("click", escolherVault);
   document.querySelector("#change-vault-btn")?.addEventListener("click", trocarVault);
+  document.querySelector("#btn-bibliotecario")?.addEventListener("click", rodarBibliotecario);
 
   const jaConectado = await invoke("is_connected");
   if (jaConectado) {
