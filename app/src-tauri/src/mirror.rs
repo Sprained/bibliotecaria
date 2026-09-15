@@ -2,6 +2,7 @@ use std::{fs, path::Path};
 
 const IGNORED_NAME: &[&str] = &[".obsidian", ".git", ".trash"];
 
+#[derive(serde::Serialize)]
 pub struct StaticSync {
     pub notes: usize,
     pub bytes: u64,

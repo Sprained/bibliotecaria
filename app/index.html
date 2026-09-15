@@ -57,6 +57,31 @@
       </div>
       </section>
 
+      <section id="view-vault" class="onboarding" hidden>
+        <div class="onboarding__intro">
+          <svg class="icon-book" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          </svg>
+          <h1>Escolha seu vault</h1>
+          <p class="tagline">Selecione a pasta do seu vault Obsidian no computador.</p>
+        </div>
+
+        <div class="rule"></div>
+
+        <div class="onboarding__action">
+          <button id="pick-vault-btn" class="btn-primary">Escolher pasta</button>
+
+          <div id="vault-status-loading" class="status-line" hidden>
+            <span class="spinner"></span>
+            <p class="status-text">Sincronizando mirror…</p>
+          </div>
+
+          <div id="vault-status-error" class="status-line" hidden>
+            <p id="vault-status-error-text" class="status-text status-text--error"></p>
+          </div>
+        </div>
+      </section>
+
       <section id="view-home" class="home" hidden>
         <header class="home__header">
           <div class="home__brand">

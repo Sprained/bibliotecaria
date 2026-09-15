@@ -124,12 +124,25 @@ com peso igual (não é dark mode forçado, os dois são pensados juntos).
   macOS. Falta multi-plataforma (Windows/Linux) e o binário de distribuição de
   verdade (via optional dependency do Agent SDK, não cópia manual) — fica pra
   fase de empacotamento/distribuição.
+- **Sincronização do mirror e escolha de vault resolvidas**: `mirror::synchronize`
+  (testado) agora é chamado por comandos Tauri reais (`get_vault_path`/
+  `set_vault_path`/`sync_now`), path do vault persistido via
+  `tauri-plugin-store`, escolha de pasta via `tauri-plugin-dialog` no
+  onboarding. Falta UI pra trocar de vault depois de escolhido (ver críticos
+  herdados, item 4).
+- **Servidor MCP em Rust com as 3 tools prontas e testadas** (`list_mirror`,
+  `read_mirror`, `write_out`), validado rodando de verdade sob `claude -p`
+  com `--mcp-config` + `--strict-mcp-config` + `--tools ""` +
+  `--permission-mode bypassPermissions`. Falta plugar isso no fluxo real do
+  app (hoje só é chamado manualmente via `scripts/test-mcp.sh` ou `claude -p`
+  direto no terminal).
 - Fora isso, o que existe é o protótipo de terminal (Opção A), testado no
   Windows, guardado em `legado-windows/` como referência de comportamento —
   não é pra evoluir, é pra não perder o que já foi validado (as regras do
   escrivão/bibliotecário, a estrutura mirror/out/staging).
-- Próximo passo real de código: **MVP** (app de 2 botões, tools escopadas do
-  Agent SDK, painel de diff/promover offline) — ver pendências abaixo.
+- Próximo passo real de código: **MVP** (app de 2 botões, chamando o
+  servidor MCP via `claude -p`, painel de diff/promover offline) — ver
+  pendências abaixo.
 
 ## Pendências / ordem de trabalho
 
@@ -137,7 +150,8 @@ com peso igual (não é dark mode forçado, os dois são pensados juntos).
    um binário nativo autocontido (não precisa de Node/SEA pra essa parte) — o
    Agent SDK usa ele como optional dependency e spawna como subprocesso.
    Sidecar do Tauri testado e funcionando nesse Mac.
-2. **MVP**: app de 2 botões, tools escopadas do Agent SDK, painel de
+2. **MVP**: app de 2 botões, tools escopadas via servidor MCP em Rust
+   (`list_mirror`/`read_mirror`/`write_out` — prontas e testadas), painel de
    diff/promover offline.
 3. **Críticos herdados do protótipo** (abaixo) — a maioria já é resolvida pelo
    desenho da Opção B, falta implementar.
@@ -151,7 +165,11 @@ com peso igual (não é dark mode forçado, os dois são pensados juntos).
 2. ~~Airgap "soft"~~: resolvido pela Opção B (tools escopadas, sem bash livre).
 3. ~~Push pré-autorizado~~: resolvido pela Opção B (promover é ação da UI, não
    comando de agente).
-4. Path do vault fixo por SO no protótipo → vira folder picker no onboarding.
+4. ~~Path do vault fixo por SO no protótipo~~: resolvido — folder picker no
+   onboarding (`tauri-plugin-dialog`) + path salvo via `tauri-plugin-store`,
+   sincroniza o mirror na escolha. **Gap novo**: não tem UI pra trocar de
+   vault depois de escolhido (só editando o `config.json` na mão ou
+   reinstalando). Falta decidir onde esse botão mora (home? configurações?).
 5. Sem detecção de conflito máquina-a-máquina (relevante só se UC3 entrar).
 6. Nenhum registro de sessão (`sessions.log`) — decidir se entra no MVP ou fica
    pra depois.
