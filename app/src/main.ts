@@ -1,5 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
+import { EditorView } from "codemirror";
+import { MergeView } from "@codemirror/merge";
 
 type Tela = "onboarding" | "vault" | "home" | "proposals" | "proposal-detail";
 
@@ -25,10 +27,9 @@ let proposalsEmptyEl: HTMLElement | null;
 let proposalDetailEl: HTMLElement | null;
 let detailBadgeEl: HTMLElement | null;
 let detailPathEl: HTMLElement | null;
-let detailColumnsEl: HTMLElement | null;
-let detailOriginalColumnEl: HTMLElement | null;
-let detailOriginalEl: HTMLElement | null;
-let detailProposalLabelEl: HTMLElement | null;
+let detailMergeWrapperEl: HTMLElement | null;
+let detailMergeEl: HTMLElement | null;
+let detailSingleEl: HTMLElement | null;
 let detailProposalEl: HTMLElement | null;
 let detailErrorEl: HTMLElement | null;
 let detailAcceptBtn: HTMLButtonElement | null;
@@ -36,6 +37,25 @@ let detailRejectBtn: HTMLButtonElement | null;
 let detailDiscardBtn: HTMLButtonElement | null;
 
 let propostaAtual: string | null = null;
+let mergeView: MergeView | null = null;
+
+const codeMirrorTheme = EditorView.theme({
+  "&": { backgroundColor: "var(--surface)", color: "var(--ink)", fontSize: "13px" },
+  ".cm-content": { fontFamily: "var(--font-sans)", padding: "12px 0" },
+  ".cm-gutters": {
+    backgroundColor: "var(--surface)",
+    color: "var(--ink-muted)",
+    border: "none",
+    borderRight: "1px solid var(--border)",
+  },
+  ".cm-scroller": { maxHeight: "480px", overflowY: "auto" },
+  ".cm-mergeSpacer": { backgroundColor: "var(--border)" },
+});
+
+function destruirMergeView() {
+  mergeView?.destroy();
+  mergeView = null;
+}
 
 function mostrarEstado(estado: "idle" | "aguardando" | "conectado" | "erro", mensagemErro?: string) {
   if (!idleEl || !loadingEl || !successEl || !errorEl) return;
@@ -206,6 +226,7 @@ function criarItemProposta(proposta: ProposalSummary): HTMLElement {
 }
 
 async function abrirPropostas() {
+  destruirMergeView();
   mostrarTela("proposals");
   if (!proposalsListEl || !proposalsEmptyEl) return;
   proposalsListEl.innerHTML = "";
@@ -234,6 +255,7 @@ function mostrarErroDetalhe(mensagem: string | null) {
 }
 
 async function abrirPropostaDetalhe(path: string) {
+  destruirMergeView();
   propostaAtual = path;
   mostrarTela("proposal-detail");
   mostrarErroDetalhe(null);
@@ -247,11 +269,26 @@ async function abrirPropostaDetalhe(path: string) {
       detailBadgeEl.className = `badge ${isSubstituicao ? "badge--substituicao" : "badge--relatorio"}`;
       detailBadgeEl.textContent = isSubstituicao ? "Substituição" : "Relatório";
     }
-    detailColumnsEl?.classList.toggle("detail-columns--single", !isSubstituicao);
-    if (detailOriginalColumnEl) detailOriginalColumnEl.hidden = !isSubstituicao;
-    if (detailOriginalEl) detailOriginalEl.textContent = detalhe.original ?? "";
-    if (detailProposalLabelEl) detailProposalLabelEl.textContent = isSubstituicao ? "Proposta" : "Relatório";
-    if (detailProposalEl) detailProposalEl.textContent = detalhe.proposal;
+
+    if (detailMergeWrapperEl) detailMergeWrapperEl.hidden = !isSubstituicao;
+    if (detailSingleEl) detailSingleEl.hidden = isSubstituicao;
+
+    if (isSubstituicao && detailMergeEl) {
+      mergeView = new MergeView({
+        a: {
+          doc: detalhe.original ?? "",
+          extensions: [EditorView.editable.of(false), EditorView.lineWrapping, codeMirrorTheme],
+        },
+        b: {
+          doc: detalhe.proposal,
+          extensions: [EditorView.editable.of(false), EditorView.lineWrapping, codeMirrorTheme],
+        },
+        parent: detailMergeEl,
+        collapseUnchanged: { margin: 3, minSize: 4 },
+      });
+    } else if (detailProposalEl) {
+      detailProposalEl.textContent = detalhe.proposal;
+    }
 
     if (detailAcceptBtn) detailAcceptBtn.hidden = !isSubstituicao;
     if (detailRejectBtn) detailRejectBtn.hidden = !isSubstituicao;
@@ -337,10 +374,9 @@ window.addEventListener("DOMContentLoaded", async () => {
   proposalDetailEl = document.querySelector("#view-proposal-detail");
   detailBadgeEl = document.querySelector("#detail-badge");
   detailPathEl = document.querySelector("#detail-path");
-  detailColumnsEl = document.querySelector("#detail-columns");
-  detailOriginalColumnEl = document.querySelector("#detail-original-column");
-  detailOriginalEl = document.querySelector("#detail-original");
-  detailProposalLabelEl = document.querySelector("#detail-proposal-label");
+  detailMergeWrapperEl = document.querySelector("#detail-merge-wrapper");
+  detailMergeEl = document.querySelector("#detail-merge");
+  detailSingleEl = document.querySelector("#detail-single");
   detailProposalEl = document.querySelector("#detail-proposal");
   detailErrorEl = document.querySelector("#detail-error");
   detailAcceptBtn = document.querySelector("#detail-accept-btn");

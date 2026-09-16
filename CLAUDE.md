@@ -152,18 +152,21 @@ com peso igual (não é dark mode forçado, os dois são pensados juntos).
   Windows, guardado em `legado-windows/` como referência de comportamento —
   não é pra evoluir, é pra não perder o que já foi validado (as regras do
   escrivão/bibliotecário, a estrutura mirror/out/staging).
-- **Painel de revisão de propostas funcionando ponta a ponta** (validado
-  2026-09-16): botão "Revisar propostas" na home (com contador) → lista
-  (`list_proposals`) → detalhe (`read_proposal`, duas colunas texto puro
-  pra Substituição, coluna única pra Relatório) → Aceitar
+- **Painel de revisão de propostas funcionando ponta a ponta, com diff de
+  verdade** (validado 2026-09-16): botão "Revisar propostas" na home (com
+  contador) → lista (`list_proposals`) → detalhe → Aceitar
   (`promote_proposal`: escreve no vault, resincroniza mirror, apaga de
   `out/`) / Rejeitar/Descartar (`discard_proposal`). Testado com nota real
   — Aceitar escreveu de fato na nota do vault, conferido abrindo no
-  Obsidian. **Fecha o MVP**.
-- Próximo passo real de código: MVP fechado. Resta a fatia 2 do plano de
-  propostas (trocar a visualização simples pelo diff de verdade com
-  CodeMirror 6 — upgrade visual, não bloqueia nada) e os críticos
-  herdados restantes (empacotamento do `vault_mcp`, `sessions.log`).
+  Obsidian. Detalhe da Substituição usa `@codemirror/merge` (`MergeView`,
+  read-only, `lineWrapping`, `collapseUnchanged` pra pular trechos sem
+  mudança em notas longas) com tema próprio (`EditorView.theme` lendo as
+  mesmas variáveis CSS do app — claro/escuro automáticos); Relatório
+  continua com `<pre>` simples (não tem original pra comparar). **Fecha o
+  MVP** (as duas fatias do plano de propostas).
+- Próximo passo real de código: MVP fechado. Resta os críticos herdados
+  restantes (empacotamento do `vault_mcp`, `sessions.log`) antes de pensar
+  em distribuição — ver pendências abaixo.
 
 ## Pendências / ordem de trabalho
 
@@ -172,14 +175,12 @@ com peso igual (não é dark mode forçado, os dois são pensados juntos).
    Agent SDK usa ele como optional dependency e spawna como subprocesso.
    Sidecar do Tauri testado e funcionando nesse Mac.
 2. **MVP**: ~~app de 2 botões, tools escopadas via servidor MCP em Rust~~
-   ~~painel de diff/promover offline, fatia 1 (mecânica + visualização
-   simples)~~ — **fechado** (2026-09-16). `commands/proposals.rs`
+   ~~painel de diff/promover offline (fatia 1: mecânica + visualização
+   simples; fatia 2: diff de verdade com CodeMirror 6 +
+   `@codemirror/merge`)~~ — **fechado** (2026-09-16). `commands/proposals.rs`
    (`list_proposals`/`read_proposal`/`promote_proposal`/`discard_proposal`)
-   + telas de lista/detalhe no frontend. Validado com vault real.
-
-   Resta só a **fatia 2**: trocar a visualização simples (duas colunas de
-   texto puro) pelo diff de verdade com CodeMirror 6 +
-   `@codemirror/merge` — puro upgrade visual, não bloqueia mais nada do MVP.
+   + telas de lista/detalhe no frontend, com `MergeView` pra Substituição.
+   Validado com vault real.
 3. **Críticos herdados do protótipo** (abaixo) — a maioria já é resolvida pelo
    desenho da Opção B, falta implementar.
 4. **Fase 2**: chat livre, UC5 (busca semântica — ver `estudos.md`, seção

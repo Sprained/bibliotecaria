@@ -231,8 +231,6 @@ h1 {
 .detail__title { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
 .detail__path { font-family: var(--font-serif); font-size: 18px; margin: 0; }
 
-.detail-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; width: 100%; }
-.detail-columns--single { grid-template-columns: 1fr; }
 .detail-column h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--ink-muted); margin: 0 0 8px; }
 .detail-column pre {
   white-space: pre-wrap; word-break: break-word; margin: 0;
@@ -240,6 +238,11 @@ h1 {
   padding: 16px; font-family: var(--font-sans); font-size: 13px; line-height: 1.6;
   max-height: 480px; overflow-y: auto;
 }
+
+.detail-merge-wrapper { width: 100%; }
+.detail-merge-labels { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 8px; }
+.detail-merge-labels h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--ink-muted); margin: 0; }
+.detail-merge { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; width: 100%; }
 
 .detail-actions { display: flex; gap: 14px; margin-top: 24px; }
 

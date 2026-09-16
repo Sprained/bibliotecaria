@@ -176,15 +176,17 @@
             <p id="detail-path" class="detail__path"></p>
           </div>
 
-          <div id="detail-columns" class="detail-columns">
-            <div id="detail-original-column" class="detail-column">
+          <div id="detail-merge-wrapper" class="detail-merge-wrapper" hidden>
+            <div class="detail-merge-labels">
               <h3>Original</h3>
-              <pre id="detail-original"></pre>
+              <h3>Proposta</h3>
             </div>
-            <div class="detail-column">
-              <h3 id="detail-proposal-label">Proposta</h3>
-              <pre id="detail-proposal"></pre>
-            </div>
+            <div id="detail-merge" class="detail-merge"></div>
+          </div>
+
+          <div id="detail-single" class="detail-column" hidden>
+            <h3>Relatório</h3>
+            <pre id="detail-proposal"></pre>
           </div>
 
           <p id="detail-error" class="status-text status-text--error" hidden></p>
