@@ -1,7 +1,10 @@
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 
-type Tela = "onboarding" | "vault" | "home";
+type Tela = "onboarding" | "vault" | "home" | "proposals" | "proposal-detail";
+
+type ProposalSummary = { path: string; isSubstitution: boolean; modified: number };
+type ProposalDetail = { proposal: string; original: string | null };
 
 let onboardingEl: HTMLElement | null;
 let vaultEl: HTMLElement | null;
@@ -15,6 +18,24 @@ let vaultLoadingEl: HTMLElement | null;
 let vaultErrorEl: HTMLElement | null;
 let vaultErrorTextEl: HTMLElement | null;
 let homeBannerEl: HTMLElement | null;
+let proposalsCountEl: HTMLElement | null;
+let proposalsEl: HTMLElement | null;
+let proposalsListEl: HTMLElement | null;
+let proposalsEmptyEl: HTMLElement | null;
+let proposalDetailEl: HTMLElement | null;
+let detailBadgeEl: HTMLElement | null;
+let detailPathEl: HTMLElement | null;
+let detailColumnsEl: HTMLElement | null;
+let detailOriginalColumnEl: HTMLElement | null;
+let detailOriginalEl: HTMLElement | null;
+let detailProposalLabelEl: HTMLElement | null;
+let detailProposalEl: HTMLElement | null;
+let detailErrorEl: HTMLElement | null;
+let detailAcceptBtn: HTMLButtonElement | null;
+let detailRejectBtn: HTMLButtonElement | null;
+let detailDiscardBtn: HTMLButtonElement | null;
+
+let propostaAtual: string | null = null;
 
 function mostrarEstado(estado: "idle" | "aguardando" | "conectado" | "erro", mensagemErro?: string) {
   if (!idleEl || !loadingEl || !successEl || !errorEl) return;
@@ -31,10 +52,16 @@ function mostrarEstado(estado: "idle" | "aguardando" | "conectado" | "erro", men
 }
 
 function mostrarTela(tela: Tela) {
-  if (!onboardingEl || !vaultEl || !homeEl) return;
+  if (!onboardingEl || !vaultEl || !homeEl || !proposalsEl || !proposalDetailEl) return;
   onboardingEl.hidden = tela !== "onboarding";
   vaultEl.hidden = tela !== "vault";
   homeEl.hidden = tela !== "home";
+  proposalsEl.hidden = tela !== "proposals";
+  proposalDetailEl.hidden = tela !== "proposal-detail";
+
+  if (tela === "home") {
+    void atualizarContadorPropostas();
+  }
 }
 
 async function decidirProximaTela() {
@@ -114,6 +141,7 @@ async function rodarBibliotecario() {
     mostrarBannerHome(String(err), true, false);
   } finally {
     definirCardsDesabilitados(false);
+    await atualizarContadorPropostas();
   }
 }
 
@@ -129,6 +157,139 @@ async function trocarVault() {
     mostrarBannerHome(`Vault atualizado — ${stats.notes} notas sincronizadas.`);
   } catch (err) {
     mostrarBannerHome(String(err), true);
+  }
+}
+
+function formatarData(epochSegundos: number): string {
+  return new Date(epochSegundos * 1000).toLocaleString("pt-BR");
+}
+
+async function atualizarContadorPropostas() {
+  if (!proposalsCountEl) return;
+  try {
+    const propostas = await invoke<ProposalSummary[]>("list_proposals");
+    if (propostas.length > 0) {
+      proposalsCountEl.textContent = String(propostas.length);
+      proposalsCountEl.hidden = false;
+    } else {
+      proposalsCountEl.hidden = true;
+    }
+  } catch {
+    proposalsCountEl.hidden = true;
+  }
+}
+
+function criarItemProposta(proposta: ProposalSummary): HTMLElement {
+  const item = document.createElement("li");
+  const btn = document.createElement("button");
+  btn.className = "proposal-item";
+  btn.type = "button";
+
+  const info = document.createElement("div");
+  info.className = "proposal-item__info";
+  const path = document.createElement("span");
+  path.className = "proposal-item__path";
+  path.textContent = proposta.path;
+  const data = document.createElement("span");
+  data.className = "proposal-item__date";
+  data.textContent = formatarData(proposta.modified);
+  info.append(path, data);
+
+  const badge = document.createElement("span");
+  badge.className = `badge ${proposta.isSubstitution ? "badge--substituicao" : "badge--relatorio"}`;
+  badge.textContent = proposta.isSubstitution ? "Substituição" : "Relatório";
+
+  btn.append(info, badge);
+  btn.addEventListener("click", () => abrirPropostaDetalhe(proposta.path));
+  item.appendChild(btn);
+  return item;
+}
+
+async function abrirPropostas() {
+  mostrarTela("proposals");
+  if (!proposalsListEl || !proposalsEmptyEl) return;
+  proposalsListEl.innerHTML = "";
+  proposalsEmptyEl.hidden = true;
+
+  try {
+    const propostas = await invoke<ProposalSummary[]>("list_proposals");
+    if (propostas.length === 0) {
+      proposalsEmptyEl.textContent = "Nenhuma proposta pendente.";
+      proposalsEmptyEl.hidden = false;
+      return;
+    }
+    for (const proposta of propostas) {
+      proposalsListEl.appendChild(criarItemProposta(proposta));
+    }
+  } catch (err) {
+    proposalsEmptyEl.textContent = String(err);
+    proposalsEmptyEl.hidden = false;
+  }
+}
+
+function mostrarErroDetalhe(mensagem: string | null) {
+  if (!detailErrorEl) return;
+  detailErrorEl.hidden = !mensagem;
+  detailErrorEl.textContent = mensagem ?? "";
+}
+
+async function abrirPropostaDetalhe(path: string) {
+  propostaAtual = path;
+  mostrarTela("proposal-detail");
+  mostrarErroDetalhe(null);
+  if (detailPathEl) detailPathEl.textContent = path;
+
+  try {
+    const detalhe = await invoke<ProposalDetail>("read_proposal", { path });
+    const isSubstituicao = detalhe.original !== null;
+
+    if (detailBadgeEl) {
+      detailBadgeEl.className = `badge ${isSubstituicao ? "badge--substituicao" : "badge--relatorio"}`;
+      detailBadgeEl.textContent = isSubstituicao ? "Substituição" : "Relatório";
+    }
+    detailColumnsEl?.classList.toggle("detail-columns--single", !isSubstituicao);
+    if (detailOriginalColumnEl) detailOriginalColumnEl.hidden = !isSubstituicao;
+    if (detailOriginalEl) detailOriginalEl.textContent = detalhe.original ?? "";
+    if (detailProposalLabelEl) detailProposalLabelEl.textContent = isSubstituicao ? "Proposta" : "Relatório";
+    if (detailProposalEl) detailProposalEl.textContent = detalhe.proposal;
+
+    if (detailAcceptBtn) detailAcceptBtn.hidden = !isSubstituicao;
+    if (detailRejectBtn) detailRejectBtn.hidden = !isSubstituicao;
+    if (detailDiscardBtn) detailDiscardBtn.hidden = isSubstituicao;
+  } catch (err) {
+    mostrarErroDetalhe(String(err));
+  }
+}
+
+function definirAcoesDetalheDesabilitadas(desabilitado: boolean) {
+  if (detailAcceptBtn) detailAcceptBtn.disabled = desabilitado;
+  if (detailRejectBtn) detailRejectBtn.disabled = desabilitado;
+  if (detailDiscardBtn) detailDiscardBtn.disabled = desabilitado;
+}
+
+async function aceitarPropostaAtual() {
+  if (!propostaAtual) return;
+  definirAcoesDetalheDesabilitadas(true);
+  try {
+    await invoke("promote_proposal", { path: propostaAtual });
+    await abrirPropostas();
+  } catch (err) {
+    mostrarErroDetalhe(String(err));
+  } finally {
+    definirAcoesDetalheDesabilitadas(false);
+  }
+}
+
+async function descartarPropostaAtual() {
+  if (!propostaAtual) return;
+  definirAcoesDetalheDesabilitadas(true);
+  try {
+    await invoke("discard_proposal", { path: propostaAtual });
+    await abrirPropostas();
+  } catch (err) {
+    mostrarErroDetalhe(String(err));
+  } finally {
+    definirAcoesDetalheDesabilitadas(false);
   }
 }
 
@@ -152,6 +313,7 @@ async function rodarEscrivao() {
     mostrarBannerHome(String(err), true, false);
   } finally {
     definirCardsDesabilitados(false);
+    await atualizarContadorPropostas();
   }
 }
 
@@ -168,12 +330,34 @@ window.addEventListener("DOMContentLoaded", async () => {
   vaultErrorEl = document.querySelector("#vault-status-error");
   vaultErrorTextEl = document.querySelector("#vault-status-error-text");
   homeBannerEl = document.querySelector("#home-banner");
+  proposalsCountEl = document.querySelector("#proposals-count");
+  proposalsEl = document.querySelector("#view-proposals");
+  proposalsListEl = document.querySelector("#proposals-list");
+  proposalsEmptyEl = document.querySelector("#proposals-empty");
+  proposalDetailEl = document.querySelector("#view-proposal-detail");
+  detailBadgeEl = document.querySelector("#detail-badge");
+  detailPathEl = document.querySelector("#detail-path");
+  detailColumnsEl = document.querySelector("#detail-columns");
+  detailOriginalColumnEl = document.querySelector("#detail-original-column");
+  detailOriginalEl = document.querySelector("#detail-original");
+  detailProposalLabelEl = document.querySelector("#detail-proposal-label");
+  detailProposalEl = document.querySelector("#detail-proposal");
+  detailErrorEl = document.querySelector("#detail-error");
+  detailAcceptBtn = document.querySelector("#detail-accept-btn");
+  detailRejectBtn = document.querySelector("#detail-reject-btn");
+  detailDiscardBtn = document.querySelector("#detail-discard-btn");
 
   document.querySelector("#login-btn")?.addEventListener("click", iniciarLogin);
   document.querySelector("#pick-vault-btn")?.addEventListener("click", escolherVault);
   document.querySelector("#change-vault-btn")?.addEventListener("click", trocarVault);
   document.querySelector("#btn-bibliotecario")?.addEventListener("click", rodarBibliotecario);
   document.querySelector("#btn-escrivao")?.addEventListener("click", rodarEscrivao);
+  document.querySelector("#review-proposals-btn")?.addEventListener("click", abrirPropostas);
+  document.querySelector("#proposals-back-btn")?.addEventListener("click", () => mostrarTela("home"));
+  document.querySelector("#detail-back-btn")?.addEventListener("click", abrirPropostas);
+  document.querySelector("#detail-accept-btn")?.addEventListener("click", aceitarPropostaAtual);
+  document.querySelector("#detail-reject-btn")?.addEventListener("click", descartarPropostaAtual);
+  document.querySelector("#detail-discard-btn")?.addEventListener("click", descartarPropostaAtual);
 
   const jaConectado = await invoke("is_connected");
   if (jaConectado) {

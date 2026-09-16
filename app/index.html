@@ -96,6 +96,9 @@
               <span class="dot"></span>
               <span>Conectado</span>
             </div>
+            <button id="review-proposals-btn" class="link-btn" type="button">
+              Revisar propostas<span id="proposals-count" class="count-badge" hidden></span>
+            </button>
             <button id="change-vault-btn" class="link-btn" type="button">Trocar vault</button>
           </div>
         </header>
@@ -132,6 +135,64 @@
               <p class="card__desc">Audita o vault inteiro: notas órfãs, duplicatas, links quebrados. Gera um relatório.</p>
               <span class="card__cta card__cta--gold">Ver relatório →</span>
             </button>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-proposals" class="home" hidden>
+        <header class="home__header">
+          <div class="home__brand">
+            <svg class="icon-book" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 5.5c2.5-1 5.5-1 8 0v13c-2.5-1-5.5-1-8 0z"/>
+              <path d="M21 5.5c-2.5-1-5.5-1-8 0v13c2.5-1 5.5-1 8 0z"/>
+            </svg>
+            <span class="home__wordmark">bibliotecária</span>
+          </div>
+          <button id="proposals-back-btn" class="link-btn" type="button">← Voltar</button>
+        </header>
+
+        <div class="home__content home__content--list">
+          <p class="home__prompt">Propostas pendentes</p>
+          <p id="proposals-empty" class="status-text" hidden>Nenhuma proposta pendente.</p>
+          <ul id="proposals-list" class="proposals-list"></ul>
+        </div>
+      </section>
+
+      <section id="view-proposal-detail" class="home" hidden>
+        <header class="home__header">
+          <div class="home__brand">
+            <svg class="icon-book" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 5.5c2.5-1 5.5-1 8 0v13c-2.5-1-5.5-1-8 0z"/>
+              <path d="M21 5.5c-2.5-1-5.5-1-8 0v13c2.5-1 5.5-1 8 0z"/>
+            </svg>
+            <span class="home__wordmark">bibliotecária</span>
+          </div>
+          <button id="detail-back-btn" class="link-btn" type="button">← Voltar</button>
+        </header>
+
+        <div class="home__content home__content--detail">
+          <div class="detail__title">
+            <span id="detail-badge" class="badge"></span>
+            <p id="detail-path" class="detail__path"></p>
+          </div>
+
+          <div id="detail-columns" class="detail-columns">
+            <div id="detail-original-column" class="detail-column">
+              <h3>Original</h3>
+              <pre id="detail-original"></pre>
+            </div>
+            <div class="detail-column">
+              <h3 id="detail-proposal-label">Proposta</h3>
+              <pre id="detail-proposal"></pre>
+            </div>
+          </div>
+
+          <p id="detail-error" class="status-text status-text--error" hidden></p>
+
+          <div class="detail-actions">
+            <button id="detail-accept-btn" class="btn-primary" type="button">Aceitar</button>
+            <button id="detail-reject-btn" class="btn-secondary" type="button">Rejeitar</button>
+            <button id="detail-discard-btn" class="btn-secondary" type="button">Descartar</button>
           </div>
         </div>
       </section>
