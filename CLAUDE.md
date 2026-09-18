@@ -196,9 +196,18 @@ com peso igual (não é dark mode forçado, os dois são pensados juntos).
    Validado com vault real.
 3. **Críticos herdados do protótipo** — todos resolvidos (ver seção abaixo).
 4. **Distribuição de verdade** (pra sair de "só eu" pra "amigos não-técnicos"):
-   assinatura de código + notarização (resolve o bloqueio do Gatekeeper),
-   multi-plataforma (Windows/Linux — hoje só builda `aarch64-apple-darwin`),
-   auto-update (plugin do Tauri já existe, não tá ligado).
+   - ~~Instrução de instalação/Gatekeeper~~: resolvido (2026-09-18) —
+     `README.md` na raiz com passo a passo de instalação e como liberar o
+     app não assinado.
+   - Assinatura de código + notarização: **decidido (2026-09-18) não pagar
+     Apple Developer Program (US$99/ano) por ora** — sem isso não tem
+     como eliminar o aviso do Gatekeeper de verdade (confirmado: nem
+     certificado self-signed resolve, ACL do Keychain é presa ao cdhash do
+     binário, não ao certificado — ver `estudos.md` se quiser o porquê
+     técnico). Fica em aberto, revisitar se o README não for suficiente.
+   - Multi-plataforma (Windows/Linux — hoje só builda
+     `aarch64-apple-darwin`): em aberto.
+   - Auto-update (plugin do Tauri já existe, não tá ligado): em aberto.
 5. **Tela de histórico** lendo o `sessions.log`: combinado (2026-09-18) de
    fazer depois de resolver a distribuição — os dados já estão sendo
    escritos, só falta a UI de leitura.

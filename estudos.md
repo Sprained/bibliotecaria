@@ -134,6 +134,24 @@ pasta). Já resumido no `CLAUDE.md` do agente; esses links são o porquê.
 um `latest.json` publicado no release. Wails tem mecanismo próprio; Electron
 usa `electron-updater`.
 
+## 10. Assinatura de código macOS sem pagar Apple Developer (2026-09-18)
+
+- Tauri — macOS code signing: https://v2.tauri.app/distribute/sign/macos/
+- Issue sobre permissão de Keychain sobrevivendo a rebuild: https://github.com/cleanunicorn/earheart/issues/159
+- Preserve macOS App Permissions Across Rebuilds with Self-Signed Certificates: https://evoleinik.com/posts/macos-dev-signing-preserve-permissions/
+
+→ **Investigado e descartado**: certificado self-signed local **não** resolve
+o Keychain repromptando a senha a cada rebuild durante dev. A ACL de acesso
+a um item do Keychain no macOS é presa ao **cdhash do binário** (hash do
+conteúdo compilado), não à identidade do certificado — então mesmo assinando
+com um certificado estável, cada `cargo build` gera um binário com conteúdo
+diferente → cdhash diferente → reprompt de novo. Certificado (self-signed ou
+pago) só ajuda a manter uma identidade estável pra fins de *notarização*
+(que exige Apple Developer Program, US$99/ano), não resolve esse incômodo
+específico de dev. Único paliativo real: clicar "Sempre Permitir" numa build
+parada (funciona bem pra uso normal, só reprompta de novo se você recompilar
+em cima).
+
 ---
 
 ## Descartado (registrando o porquê)
