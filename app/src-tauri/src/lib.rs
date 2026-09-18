@@ -1,5 +1,6 @@
 mod commands;
 mod mirror;
+mod sessions;
 
 use commands::agent::{run_bibliotecario, run_escrivao};
 use commands::auth::{connect_claude, is_connected};

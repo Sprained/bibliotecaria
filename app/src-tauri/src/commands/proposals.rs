@@ -1,4 +1,5 @@
 use crate::commands::vault::{get_vault_path, out_dir, sync_now};
+use crate::sessions::{self, SessionEvent};
 use serde::Serialize;
 use std::path::{Component, Path, PathBuf};
 use std::time::UNIX_EPOCH;
@@ -61,14 +62,30 @@ pub fn promote_proposal(app: AppHandle, path: String) -> Result<(), String> {
 
     sync_now(app.clone())?;
 
-    std::fs::remove_file(&proposal_path).map_err(|e| e.to_string())
+    std::fs::remove_file(&proposal_path).map_err(|e| e.to_string())?;
+
+    log_decision(&app, &path, "aceita");
+    Ok(())
 }
 
 #[tauri::command]
 pub fn discard_proposal(app: AppHandle, path: String) -> Result<(), String> {
     let out = out_dir(&app)?;
     let proposal_path = resolve_within(&out, &path)?;
-    std::fs::remove_file(&proposal_path).map_err(|e| e.to_string())
+    std::fs::remove_file(&proposal_path).map_err(|e| e.to_string())?;
+
+    log_decision(&app, &path, "descartada");
+    Ok(())
+}
+
+fn log_decision(app: &AppHandle, path: &str, decision: &'static str) {
+    let event = SessionEvent::Decision {
+        path: path.to_string(),
+        decision,
+    };
+    if let Err(e) = sessions::log_event(app, event) {
+        eprintln!("[sessions.log] erro ao registrar evento: {e}");
+    }
 }
 
 fn collect_proposals(

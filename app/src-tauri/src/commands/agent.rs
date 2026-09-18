@@ -1,5 +1,6 @@
 use crate::commands::auth::get_saved_token;
 use crate::commands::vault::{get_vault_path, mirror_dir, out_dir, sync_now};
+use crate::sessions::{self, SessionEvent};
 use serde_json::json;
 use std::path::{Path, PathBuf};
 use tauri::AppHandle;
@@ -15,12 +16,14 @@ pub async fn run_bibliotecario(app: AppHandle) -> Result<String, String> {
     sync_now(app.clone())?;
 
     let system_prompt = format!("{SHARED_PROMPT}\n\n{BIBLIOTECARIO_PROMPT}");
-    run_agent(
+    let result = run_agent(
         &app,
         &system_prompt,
         "Audite o vault e gere o relatório do bibliotecário.",
     )
-    .await
+    .await;
+    log_agent_run(&app, "bibliotecario", None, &result);
+    result
 }
 
 #[tauri::command]
@@ -33,7 +36,30 @@ pub async fn run_escrivao(app: AppHandle, note_path: String) -> Result<String, S
 
     let system_prompt = format!("{SHARED_PROMPT}\n\n{ESCRIVAO_PROMPT}");
     let prompt = format!("Reescreva a nota `{relative}` seguindo o modo escrivão.");
-    run_agent(&app, &system_prompt, &prompt).await
+    let result = run_agent(&app, &system_prompt, &prompt).await;
+    log_agent_run(&app, "escrivao", Some(relative), &result);
+    result
+}
+
+fn log_agent_run(
+    app: &AppHandle,
+    mode: &'static str,
+    note: Option<String>,
+    result: &Result<String, String>,
+) {
+    let (success, summary) = match result {
+        Ok(text) => (true, text.clone()),
+        Err(error) => (false, error.clone()),
+    };
+    let event = SessionEvent::AgentRun {
+        mode,
+        note,
+        success,
+        summary,
+    };
+    if let Err(e) = sessions::log_event(app, event) {
+        eprintln!("[sessions.log] erro ao registrar evento: {e}");
+    }
 }
 
 fn relative_to_vault(vault_path: &str, note_path: &str) -> Result<String, String> {

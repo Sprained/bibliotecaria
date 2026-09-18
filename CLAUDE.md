@@ -194,10 +194,24 @@ com peso igual (não é dark mode forçado, os dois são pensados juntos).
    (`list_proposals`/`read_proposal`/`promote_proposal`/`discard_proposal`)
    + telas de lista/detalhe no frontend, com `MergeView` pra Substituição.
    Validado com vault real.
-3. **Críticos herdados do protótipo** (abaixo) — a maioria já é resolvida pelo
-   desenho da Opção B, falta implementar.
-4. **Fase 2**: chat livre, UC5 (busca semântica — ver `estudos.md`, seção
+3. **Críticos herdados do protótipo** — todos resolvidos (ver seção abaixo).
+4. **Distribuição de verdade** (pra sair de "só eu" pra "amigos não-técnicos"):
+   assinatura de código + notarização (resolve o bloqueio do Gatekeeper),
+   multi-plataforma (Windows/Linux — hoje só builda `aarch64-apple-darwin`),
+   auto-update (plugin do Tauri já existe, não tá ligado).
+5. **Tela de histórico** lendo o `sessions.log`: combinado (2026-09-18) de
+   fazer depois de resolver a distribuição — os dados já estão sendo
+   escritos, só falta a UI de leitura.
+6. **Fase 2**: chat livre, UC5 (busca semântica — ver `estudos.md`, seção
    "interessante pro projeto"), UC4/6/7.
+7. **Normalizar nomenclatura do frontend (TS) pra inglês** — convenção do
+   projeto é nomes de função/variável em inglês, comentários/erros podem
+   ficar em português (já aplicado no backend Rust). O `app/src/main.ts`
+   ainda tem função/variável em português de sessões anteriores
+   (`mostrarTela`, `abrirPropostas`, `rodarBibliotecario`, etc.).
+   Combinado (2026-09-18) de deixar assim por ora — não bloqueia nada — e
+   normalizar depois, junto de outra rodada de mudança no frontend em vez
+   de um rename isolado.
 
 ## Críticos herdados do protótipo
 
@@ -211,8 +225,15 @@ com peso igual (não é dark mode forçado, os dois são pensados juntos).
    sincroniza o mirror na escolha, e botão "Trocar vault" na home pra mudar
    depois.
 5. Sem detecção de conflito máquina-a-máquina (relevante só se UC3 entrar).
-6. Nenhum registro de sessão (`sessions.log`) — decidir se entra no MVP ou fica
-   pra depois.
+6. ~~Nenhum registro de sessão~~: resolvido (2026-09-18). `sessions.rs`
+   escreve `sessions.log` (JSONL, um evento por linha) na pasta de dados do
+   app, do lado de `mirror/`/`out/`. Dois tipos de evento: `AgentRun`
+   (fim de uma sessão do Bibliotecário/Escrivão — modo, nota quando
+   Escrivão, sucesso, resumo do que o agente devolveu) e `Decisao`
+   (aceita/descartada, com o path). Só escrita por enquanto, sem tela de
+   leitura — decisão deliberada pra não inventar UI que ninguém pediu
+   ainda; os dados já ficam prontos pro dia que quiser essa tela (ver
+   pendências).
 7. ~~`vault_mcp` não tem empacotamento de verdade~~: resolvido (2026-09-17).
    Entrou no `externalBin` do `tauri.conf.json` igual o `claude`;
    `scripts/build-sidecars.sh` builda e renomeia com o target triple certo
