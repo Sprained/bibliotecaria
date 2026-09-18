@@ -164,9 +164,22 @@ com peso igual (não é dark mode forçado, os dois são pensados juntos).
   mesmas variáveis CSS do app — claro/escuro automáticos); Relatório
   continua com `<pre>` simples (não tem original pra comparar). **Fecha o
   MVP** (as duas fatias do plano de propostas).
-- Próximo passo real de código: MVP fechado. Resta os críticos herdados
-  restantes (empacotamento do `vault_mcp`, `sessions.log`) antes de pensar
-  em distribuição — ver pendências abaixo.
+- **Primeiro release publicado** (2026-09-17):
+  [v0.1.0](https://github.com/Sprained/bibliotecaria/releases/tag/v0.1.0),
+  marcado como pre-release. `vault_mcp` entrou no `externalBin` do Tauri
+  (mesmo tratamento do binário `claude`) via `scripts/build-sidecars.sh`;
+  validado com `tauri build` real — o `.app` final tem os três binários
+  (`app`/`claude`/`vault_mcp`) em `Contents/MacOS/` e o sidecar sobe
+  certinho no app empacotado, não só em dev. Ganhou nome e ícone de
+  verdade (`productName`/`identifier` trocados de "app" genérico,
+  `app-icon.svg` gerado a partir dos mesmos paths do livro que já
+  existiam na UI). Limitações conhecidas, documentadas no release: só
+  Apple Silicon, sem assinatura/notarização (Gatekeeper bloqueia até o
+  usuário liberar manualmente).
+- Próximo passo real de código: MVP fechado, primeiro release no ar.
+  Resta o `sessions.log` (crítico herdado, ainda em aberto) e, quando for
+  hora de distribuir pra valer pros amigos, assinatura/notarização +
+  multi-plataforma (Windows/Linux) — ver pendências abaixo.
 
 ## Pendências / ordem de trabalho
 
@@ -200,12 +213,15 @@ com peso igual (não é dark mode forçado, os dois são pensados juntos).
 5. Sem detecção de conflito máquina-a-máquina (relevante só se UC3 entrar).
 6. Nenhum registro de sessão (`sessions.log`) — decidir se entra no MVP ou fica
    pra depois.
-7. **`vault_mcp` não tem empacotamento de verdade**: hoje o caminho do
-   binário é resolvido como "vizinho" do executável principal
-   (`current_exe().parent()`), o que só funciona em dev porque os dois
-   binários caem em `target/debug/`. Precisa virar sidecar/resource de
-   verdade (mesmo tratamento que o `claude` binário) antes de empacotar pra
-   distribuição.
+7. ~~`vault_mcp` não tem empacotamento de verdade~~: resolvido (2026-09-17).
+   Entrou no `externalBin` do `tauri.conf.json` igual o `claude`;
+   `scripts/build-sidecars.sh` builda e renomeia com o target triple certo
+   (com bootstrap de placeholder, já que o `build.rs` do Tauri valida a
+   existência do `externalBin` antes mesmo de compilar). O código que
+   resolve o caminho em `agent.rs` (`current_exe().parent()`) não precisou
+   mudar — confirmado que o Tauri copia sidecars pra mesma pasta do
+   executável principal no bundle final, igual já acontecia em dev por
+   coincidência.
 
 ## Documentação relacionada
 
