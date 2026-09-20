@@ -152,6 +152,19 @@ específico de dev. Único paliativo real: clicar "Sempre Permitir" numa build
 parada (funciona bem pra uso normal, só reprompta de novo se você recompilar
 em cima).
 
+## 11. Build Windows no GitHub Actions: MSI (WiX) falha, NSIS funciona (2026-09-20)
+
+- Issue no repo do Tauri: https://github.com/tauri-apps/tauri/issues/10809
+
+→ `tauri build` no runner `windows-latest` falhava só no bundle `.msi`
+(`failed to run ...\WixTools314\light.exe`) com o `.exe` da app já
+compilado normalmente. Causa: o bundler MSI usa WiX v3, que depende do
+recurso opcional **VBScript** do Windows — removido por padrão nas imagens
+mais recentes do runner. Sem fix oficial do Tauri ainda. Contornado
+trocando o alvo do bundle pra **NSIS** (`--bundles nsis`), que não depende
+de WiX/VBScript — também é o formato mais recomendado hoje em dia pro
+instalador Windows do Tauri.
+
 ---
 
 ## Descartado (registrando o porquê)

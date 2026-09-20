@@ -33,12 +33,14 @@ jobs:
 
       - name: Builda o app
         working-directory: app
-        run: npm run tauri build
+        # NSIS em vez de MSI: o bundler MSI (WiX v3) depende do recurso
+        # opcional VBScript do Windows, que sumiu por padrão nas imagens
+        # mais recentes do runner windows-latest (falha com "failed to run
+        # ...\light.exe"). NSIS não tem essa dependência.
+        run: npm run tauri build -- --bundles nsis
 
       - name: Sobe os artefatos
         uses: actions/upload-artifact@v4
         with:
           name: bibliotecaria-windows
-          path: |
-            app/src-tauri/target/release/bundle/msi/*.msi
-            app/src-tauri/target/release/bundle/nsis/*.exe
+          path: app/src-tauri/target/release/bundle/nsis/*.exe
