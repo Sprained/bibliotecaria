@@ -9,7 +9,10 @@ cd "$(dirname "$0")/.."
 
 docker build --platform linux/amd64 -t bibliotecaria-linux-build -f Dockerfile.linux .
 
-docker run --rm --platform linux/amd64 -v "$(pwd):/workspace" bibliotecaria-linux-build bash -c "
+docker run --rm --platform linux/amd64 \
+  -v "$(pwd):/workspace" \
+  -v bibliotecaria-linux-node-modules:/workspace/app/node_modules \
+  bibliotecaria-linux-build bash -c "
   set -euo pipefail
   npm install
   ./src-tauri/scripts/fetch-claude-sidecar.sh x86_64-unknown-linux-gnu
