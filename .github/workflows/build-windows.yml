@@ -1,0 +1,44 @@
+name: Build Windows
+
+# Disparo manual por enquanto — só builda e disponibiliza o artefato pra
+# baixar/testar, não publica em Release sozinho.
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Instala dependências do frontend
+        working-directory: app
+        run: npm install
+
+      - name: Busca o binário do claude
+        working-directory: app/src-tauri
+        shell: bash
+        run: ./scripts/fetch-claude-sidecar.sh x86_64-pc-windows-msvc
+
+      - name: Builda o vault_mcp sidecar
+        working-directory: app/src-tauri
+        shell: bash
+        run: ./scripts/build-sidecars.sh
+
+      - name: Builda o app
+        working-directory: app
+        run: npm run tauri build
+
+      - name: Sobe os artefatos
+        uses: actions/upload-artifact@v4
+        with:
+          name: bibliotecaria-windows
+          path: |
+            app/src-tauri/target/release/bundle/msi/*.msi
+            app/src-tauri/target/release/bundle/nsis/*.exe
